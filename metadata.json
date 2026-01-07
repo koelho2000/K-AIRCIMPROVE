@@ -1,0 +1,5 @@
+{
+  "name": "K-AIRCIMPROVE",
+  "description": "Professional energy efficiency application for compressed air systems. Define base and proposed scenarios, calculate savings, and generate detailed reports based on the ADENE manual.",
+  "requestFramePermissions": []
+}
