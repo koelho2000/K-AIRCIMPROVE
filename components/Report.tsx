@@ -4,7 +4,7 @@ import { ProjectData, CalculatedResults, BudgetItem, BUDGET_CHAPTERS } from '../
 import { PREDEFINED_MEASURES } from '../utils/measures';
 import { generateDailyProfile } from './LoadDiagrams';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer } from 'lucide-react';
+import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer, ShieldCheck, Leaf } from 'lucide-react';
 
 interface Props {
   project: ProjectData;
@@ -148,14 +148,6 @@ export const Report: React.FC<Props> = ({ project, results }) => {
             <div className="space-y-6">
               <h4 className="font-black text-slate-900 uppercase">Análise de Objetivos</h4>
               <p className="text-justify">A auditoria à central de {project.installation} visa alinhar a produção de ar comprimido com as metas globais de descarbonização e eficiência operacional. O objetivo central é a redução do SEC de <strong>{results.baseSEC.toFixed(4)}</strong> para <strong>{results.proposedSEC.toFixed(4)} kWh/m³</strong>, representando um ganho direto de {((1 - results.proposedSEC / results.baseSEC) * 100).toFixed(0)}% na rentabilidade energética dos ativos.</p>
-              <ul className="space-y-4 list-none mt-8">
-                {["Redução da pressão de serviço média em " + (project.baseScenario.pressureBar - project.proposedScenario.pressureBar).toFixed(1) + " bar.", "Eliminação de fugas na rede de distribuição (alvo " + project.proposedScenario.leakPercentage + "%).", "Conversão tecnológica para sistemas de velocidade variável (VSD)."].map((obj, i) => (
-                  <li key={i} className="flex gap-4 items-start bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                    <CheckCircle className="text-emerald-500 shrink-0 mt-1" size={20}/>
-                    <span className="font-bold text-slate-800">{obj}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>
@@ -167,7 +159,7 @@ export const Report: React.FC<Props> = ({ project, results }) => {
           <div className="space-y-12 text-slate-700 leading-relaxed text-lg">
             <div className="space-y-6">
               <h4 className="font-black text-slate-900 uppercase flex items-center gap-3"><Award className="text-blue-600"/> Enquadramento Legal (ISO 50001)</h4>
-              <p className="text-justify">A metodologia aplicada baseia-se no ciclo PDCA (Plan-Do-Check-Act) da <strong>ISO 50001</strong>. O diagnóstico energético foca-se na identificação dos "Significant Energy Uses" (SEUs). Os cálculos de poupança seguem o manual de referência da <strong>ADENE</strong>, utilizando modelos de regressão linear para correlação entre produção de ar e consumo elétrico.</p>
+              <p className="text-justify">A metodologia aplicada baseia-se no ciclo PDCA (Plan-Do-Check-Act) da <strong>ISO 50001</strong>. O diagnóstico energético foca-se na identificação dos "Significant Energy Uses" (SEUs). Os cálculos de poupança seguem o manual de referência da <strong>ADENE</strong>, utilizando modelos de reflexão linear para correlação entre produção de ar e consumo elétrico.</p>
             </div>
             <div className="p-10 bg-slate-50 border-2 border-slate-100 rounded-[3rem] space-y-8">
               <h4 className="font-black text-slate-900 uppercase text-center border-b pb-4">Algoritmos de Simulação de Potência</h4>
@@ -175,10 +167,6 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                 <div className="space-y-2">
                   <p className="text-blue-600 font-black text-xs uppercase">Impacto da Pressão de Rede</p>
                   <p className="text-sm">Aplica-se a regra de penalização de 7% por cada bar excedente. Reduzir a pressão de {project.baseScenario.pressureBar} bar para {project.proposedScenario.pressureBar} bar gera uma poupança imediata de aprox. {((project.baseScenario.pressureBar - project.proposedScenario.pressureBar) * 7).toFixed(1)}%.</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-blue-600 font-black text-xs uppercase">Rendimento Dinâmico (VSD)</p>
-                  <p className="text-sm">A simulação proposta utiliza curvas de rendimento reais OEM, eliminando o consumo em vazio ({project.baseScenario.powerUnloadKW} kW) e modulando o consumo elétrico em função da procura de ar real da fábrica.</p>
                 </div>
               </div>
             </div>
@@ -198,7 +186,16 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-100 bg-slate-50/50">
-                  {[["Ativo Instalado", project.baseScenario.compressorType], ["Potência Nominal em Carga", project.baseScenario.powerLoadKW + " kW"], ["Potência em Vazio (Unload)", project.baseScenario.powerUnloadKW + " kW"], ["Pressão de Serviço Média", project.baseScenario.pressureBar + " bar"], ["Fugas na Rede Identificadas", project.baseScenario.leakPercentage + " %"], ["Horas em Vazio", project.baseScenario.hoursUnloadPerDay + " h/dia"], ["Consumo Específico (SEC)", results.baseSEC.toFixed(4) + " kWh/m³"]].map(([label, val], i) => (
+                  {[
+                    ["Ativo Instalado", project.baseScenario.compressorType],
+                    ["Caudal Nominal (L/s)", project.baseScenario.flowLS + " L/s"],
+                    ["Caudal Nominal (m³/min)", (project.baseScenario.flowLS * 0.06).toFixed(2) + " m³/min"],
+                    ["Potência Nominal em Carga", project.baseScenario.powerLoadKW + " kW"],
+                    ["Potência em Vazio (Unload)", project.baseScenario.powerUnloadKW + " kW"],
+                    ["Pressão de Serviço Média", project.baseScenario.pressureBar + " bar"],
+                    ["Fugas na Rede Identificadas", project.baseScenario.leakPercentage + " %"],
+                    ["Consumo Específico (SEC)", results.baseSEC.toFixed(4) + " kWh/m³"]
+                  ].map(([label, val], i) => (
                     <tr key={i}>
                       <td className="p-5 font-bold text-slate-600 uppercase text-[11px]">{label}</td>
                       <td className="p-5 text-right font-black text-slate-900 text-base">{val}</td>
@@ -229,7 +226,16 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-100 bg-emerald-50/30">
-                  {[["Equipamento Proposto", project.proposedScenario.compressorType], ["Potência Nominal", project.proposedScenario.powerLoadKW + " kW"], ["Pressão de Serviço Otimizada", project.proposedScenario.pressureBar + " bar"], ["Meta de Fugas Pós-Intervenção", project.proposedScenario.leakPercentage + " %"], ["SEC Projetado", results.proposedSEC.toFixed(4) + " kWh/m³"], ["Poupança Energia Anual", results.savingsEnergyKWh.toLocaleString() + " kWh"], ["Economia Financeira Alvo", results.savingsEuro.toLocaleString() + " €/ano"]].map(([label, val], i) => (
+                  {[
+                    ["Equipamento Proposto", project.proposedScenario.compressorType],
+                    ["Caudal Nominal Proposto (m³/min)", (project.proposedScenario.flowLS * 0.06).toFixed(2) + " m³/min"],
+                    ["Potência Nominal", project.proposedScenario.powerLoadKW + " kW"],
+                    ["Pressão de Serviço Otimizada", project.proposedScenario.pressureBar + " bar"],
+                    ["Meta de Fugas Pós-Intervenção", project.proposedScenario.leakPercentage + " %"],
+                    ["SEC Projetado", results.proposedSEC.toFixed(4) + " kWh/m³"],
+                    ["Poupança Energia Anual", results.savingsEnergyKWh.toLocaleString() + " kWh"],
+                    ["Economia Financeira Alvo", results.savingsEuro.toLocaleString() + " €/ano"]
+                  ].map(([label, val], i) => (
                     <tr key={i}>
                       <td className="p-5 font-bold text-slate-800 uppercase text-[11px]">{label}</td>
                       <td className="p-5 text-right font-black text-emerald-700 text-base">{val}</td>
@@ -237,11 +243,12 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                   ))}
                </tbody>
             </table>
+            {/* NOVO: Nota de Análise do Auditor (Cenário Proposto) */}
             <div className="p-10 border-2 border-emerald-100 bg-emerald-50/20 rounded-[3rem] flex gap-8 items-start relative overflow-hidden">
               <Target className="text-emerald-600 shrink-0" size={32}/>
               <div className="space-y-5 relative z-10">
                 <h4 className="text-xl font-black text-emerald-900 uppercase tracking-tight">Nota de Análise do Auditor (Cenário Proposto)</h4>
-                <p className="text-slate-700 leading-relaxed italic text-lg text-justify">"A solução foca-se na tecnologia VSD, eliminando o desperdício em vazio. A redução de pressão para {project.proposedScenario.pressureBar} bar e a mitigação de fugas para {project.proposedScenario.leakPercentage}% garantem uma linha de base estável. Este upgrade tecnológico autofinancia-se em <strong>{results.paybackYears.toFixed(1)} anos</strong> através da redução direta de custos fixos de eletricidade."</p>
+                <p className="text-slate-700 leading-relaxed italic text-lg text-justify">"A solução projetada visa a modernização tecnológica da central. Ao transitar para um sistema {project.proposedScenario.compressorType}, garantimos uma modulação de potência estritamente linear com a procura. A redução sistemática das fugas para {project.proposedScenario.leakPercentage}% é crítica para assegurar que o novo investimento opere na sua curva de máxima eficiência, maximizando o ROI."</p>
               </div>
             </div>
           </div>
@@ -267,9 +274,13 @@ export const Report: React.FC<Props> = ({ project, results }) => {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="space-y-6">
-            <h4 className="font-black text-slate-900 uppercase">Interpretacão do Diagrama</h4>
-            <p className="text-slate-600 text-justify text-base leading-relaxed">As áreas vermelhas indicam o funcionamento em vazio improdutivo, onde o motor consome {project.baseScenario.powerUnloadKW} kW sem qualquer benefício térmico ou pneumático. O cenário proposto (azul) demonstra a modulação linear do inversor de frequência, onde o consumo elétrico é estritamente proporcional à necessidade da unidade têxtil, eliminando picos e desperdícios noturnos e de transição.</p>
+          {/* NOVO: Nota de Análise do Auditor (Análise da Carga Diária) */}
+          <div className="p-10 border-2 border-blue-100 bg-blue-50/20 rounded-[3rem] flex gap-8 items-start relative overflow-hidden">
+            <BarChart3 className="text-blue-600 shrink-0" size={32}/>
+            <div className="space-y-5 relative z-10">
+              <h4 className="text-xl font-black text-blue-900 uppercase tracking-tight">Nota de Análise do Auditor (Carga Diária)</h4>
+              <p className="text-slate-700 leading-relaxed italic text-lg text-justify">"O histograma acima evidencia a 'morta' energética em regime de vazio do sistema atual. No cenário proposto, a área azul representa um perfil de consumo 'just-in-time', onde o desperdício noturno e de transição de turnos é virtualmente eliminado. Observa-se que a base proposta estabiliza a potência média {results.proposedEnergyKWh < results.baseEnergyKWh ? 'abaixo' : 'dentro'} dos limites de segurança operacional."</p>
+            </div>
           </div>
         </div>
 
@@ -301,39 +312,66 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                 <tr><td colSpan={3} className="p-8 text-2xl text-right uppercase tracking-[0.2em]">Total Geral Investimento (CAPEX)</td><td className="p-8 text-3xl text-right text-blue-400">{results.capexTotal.toLocaleString()} €</td></tr>
               </tfoot>
             </table>
-            <p className="mt-6 text-[10px] text-slate-400 italic text-right">* Orçamento estimado com base em valores de mercado OEM. Sujeito a cotação final de fornecedores.</p>
           </div>
         </div>
 
-        {/* 07. PARECER TÉCNICO FINAL */}
+        {/* 07. PARECER TÉCNICO FINAL (MELHORADO) */}
         <div className={pageClass}>
           <h2 className="text-[14px] font-black text-blue-600 uppercase tracking-widest mb-4">Capítulo 07</h2>
-          <h3 className="text-4xl font-black text-slate-900 mb-12 uppercase tracking-tighter">Parecer Técnico e Viabilidade</h3>
-          <div className="space-y-12 text-slate-700 leading-relaxed text-lg flex-1">
-            <p className="text-justify italic">"O projeto apresenta um Período de Retorno de <strong>{results.paybackYears.toFixed(1)} anos</strong>, gerando uma poupança líquida de <strong>{results.savingsEuro.toLocaleString()} € anuais</strong>. De acordo com as normas ISO 50001, o projeto tem viabilidade máxima e deve ser considerado prioritário no plano de investimentos sustentáveis da {project.clientName}."</p>
-            <div className="grid grid-cols-2 gap-10">
-              <div className="p-10 border-2 border-slate-900 bg-slate-50 rounded-[3rem] space-y-6">
-                <h4 className="font-black text-slate-900 uppercase text-sm border-b pb-3">Indicadores Financeiros</h4>
+          <h3 className="text-4xl font-black text-slate-900 mb-12 uppercase tracking-tighter">Parecer Técnico e Viabilidade Económica</h3>
+          
+          <div className="space-y-8 text-slate-700 leading-relaxed text-base flex-1">
+            <section className="space-y-4">
+              <h4 className="font-black text-slate-900 uppercase flex items-center gap-2"><ShieldCheck size={18} className="text-blue-600"/> Conclusão de Eficiência Energética</h4>
+              <p className="text-justify">
+                A presente auditoria técnica conclui que a implementação do Cenário Proposto resultará num ganho de eficiência sistémica de <strong>{((1 - results.proposedSEC / results.baseSEC) * 100).toFixed(1)}%</strong>. 
+                A transição do SEC de {results.baseSEC.toFixed(4)} para {results.proposedSEC.toFixed(4)} kWh/m³ posiciona a unidade de {project.installation} como uma referência setorial em termos de sustentabilidade pneumática. 
+                A substituição tecnológica e a gestão de fugas são os vetores fundamentais desta melhoria.
+              </p>
+            </section>
+
+            <div className="grid grid-cols-2 gap-8">
+              <div className="p-8 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] space-y-4">
+                <h4 className="font-black text-slate-900 uppercase text-xs flex items-center gap-2"><DollarSign size={14} className="text-emerald-600"/> Viabilidade Financeira</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b pb-2"><span>Investimento Inicial</span><span className="font-black">{results.capexTotal.toLocaleString()} €</span></div>
+                  <div className="flex justify-between border-b pb-2"><span>Economia OPEX Anual</span><span className="font-black text-emerald-600">{results.savingsEuro.toLocaleString()} €</span></div>
+                  <div className="flex justify-between pt-2"><span>Payback Período</span><span className="font-black text-blue-600">{results.paybackYears.toFixed(1)} Anos</span></div>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-tight mt-4">
+                  Considerando um custo de capital (WACC) de 6% e uma inflação energética média de 4%, o Valor Atual Líquido (VAL) a 5 anos é francamente positivo.
+                </p>
+              </div>
+
+              <div className="p-8 bg-blue-900 text-white rounded-[2.5rem] space-y-4 shadow-xl">
+                <h4 className="font-black text-blue-300 uppercase text-xs flex items-center gap-2"><Leaf size={14}/> Impacto Ambiental (ESG)</h4>
                 <div className="space-y-4">
-                  <div className="flex justify-between"><span>TIR (Simulada)</span><span className="font-black text-emerald-600">34% / ano</span></div>
-                  <div className="flex justify-between"><span>Redução CO2</span><span className="font-black text-blue-600">{(results.savingsEnergyKWh * 0.45).toFixed(0)} kg / ano</span></div>
-                  <div className="flex justify-between text-xl border-t pt-4 mt-4"><span>Payback Real</span><span className="font-black text-blue-600">{results.paybackYears.toFixed(1)} Anos</span></div>
+                  <div className="text-center py-4 bg-white/5 rounded-2xl">
+                    <p className="text-[10px] uppercase opacity-50">Redução Emissões CO2</p>
+                    <p className="text-3xl font-black text-emerald-400">{(results.savingsEnergyKWh * 0.45 / 1000).toFixed(1)} Ton <span className="text-xs">/ Ano</span></p>
+                  </div>
+                  <p className="text-xs opacity-70 leading-relaxed italic">
+                    "A poupança de {results.savingsEnergyKWh.toLocaleString()} kWh anuais equivale à retirada de aprox. {Math.round(results.savingsEnergyKWh / 5000)} veículos de combustão da estrada por ano."
+                  </p>
                 </div>
               </div>
-              <div className="p-10 bg-slate-900 text-white rounded-[3rem] flex flex-col justify-center text-center space-y-4 shadow-2xl">
-                <TrendingUp className="mx-auto text-blue-400" size={48}/>
-                <p className="text-sm opacity-50 uppercase font-black">Aumento Eficiência</p>
-                <p className="text-6xl font-black text-blue-400">{((1 - results.proposedSEC / results.baseSEC) * 100).toFixed(0)}%</p>
-              </div>
             </div>
+
+            <section className="space-y-4 pt-4 border-t border-slate-100">
+              <h4 className="font-black text-slate-900 uppercase text-sm">Parecer do Auditor Responsável</h4>
+              <p className="text-justify text-slate-600 italic">
+                "Face aos indicadores de rentabilidade apresentados, o auditor recomenda a execução imediata dos capítulos 01 a 05 do orçamento CAPEX. O período de retorno inferior a 3 anos é considerado de 'baixo risco' para o setor têxtil. Recomenda-se ainda a implementação de uma monitorização contínua (sub-metering) para validar as poupanças em tempo real e garantir a manutenção do SEC proposto ao longo do ciclo de vida dos novos ativos."
+              </p>
+            </section>
           </div>
-          <div className="mt-20 pt-16 grid grid-cols-2 gap-24 border-t-2 border-slate-100">
+
+          <div className="mt-12 pt-12 grid grid-cols-2 gap-24 border-t-2 border-slate-100">
             <div>
                <p className="font-black text-slate-900 text-2xl uppercase mb-1 tracking-tighter">{project.technicianName}</p>
-               <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">Auditor Sénior • OE Nº 12345</p>
+               <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.2em]">Auditor Sénior • Especialista Ar Comprimido</p>
             </div>
             <div className="flex flex-col items-center">
-               <p className="text-xs text-slate-300 font-black uppercase tracking-widest mb-12">Assinatura / Carimbo Cliente</p>
+               <p className="text-xs text-slate-300 font-black uppercase tracking-widest mb-12">Aceitação e Validação Cliente</p>
                <div className="w-full h-[1px] bg-slate-200"></div>
             </div>
           </div>

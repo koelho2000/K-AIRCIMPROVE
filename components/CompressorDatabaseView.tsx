@@ -2,10 +2,14 @@
 import React, { useState, useMemo } from 'react';
 import { COMPRESSOR_DATABASE } from '../utils/compressors';
 import { CompressorModel, Brand, CompressorType } from '../types';
-import { Search, Filter, LineChart, Info, Box, Zap, Gauge, ChevronRight, BarChart2, DollarSign, Activity } from 'lucide-react';
+import { Search, Filter, LineChart, Info, Box, Zap, Gauge, ChevronRight, BarChart2, DollarSign, Activity, CheckCircle2 } from 'lucide-react';
 import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 
-export const CompressorDatabaseView: React.FC = () => {
+interface Props {
+  onSelectForProposed?: (model: CompressorModel) => void;
+}
+
+export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [brandFilter, setBrandFilter] = useState<Brand | 'All'>('All');
   const [typeFilter, setTypeFilter] = useState<CompressorType | 'All'>('All');
@@ -118,7 +122,7 @@ export const CompressorDatabaseView: React.FC = () => {
         {/* Detalhes / Eficiência */}
         <div className="lg:col-span-5 space-y-8">
           {selectedModel ? (
-            <div className="bg-white rounded-[3rem] shadow-2xl shadow-blue-500/10 border border-slate-100 p-12 space-y-10 animate-in slide-in-from-right-8 duration-500 relative overflow-hidden">
+            <div className="bg-white rounded-[3rem] shadow-2xl shadow-blue-500/10 border border-slate-100 p-12 space-y-10 animate-in slide-in-from-right-8 duration-500 relative overflow-hidden flex flex-col">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[5rem] -mr-16 -mt-16 opacity-50"/>
               
               <div className="flex items-center gap-8 relative z-10">
@@ -131,6 +135,16 @@ export const CompressorDatabaseView: React.FC = () => {
                 </div>
               </div>
 
+              {onSelectForProposed && (
+                <button 
+                  onClick={() => onSelectForProposed(selectedModel)}
+                  className="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+                >
+                  <CheckCircle2 size={18} />
+                  Selecionar para Cenário Proposto
+                </button>
+              )}
+
               <div className="grid grid-cols-2 gap-6">
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                   <p className="text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center gap-2"><Gauge size={12} className="text-blue-500"/> Caudal Nominal</p>
@@ -142,7 +156,7 @@ export const CompressorDatabaseView: React.FC = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center justify-between mb-6">
                   <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                     <BarChart2 size={14} className="text-blue-600"/> Curva de Eficiência (SEC)
@@ -152,7 +166,7 @@ export const CompressorDatabaseView: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="h-[280px] w-full border-2 border-slate-50 rounded-[2.5rem] p-8 bg-slate-50/30">
+                <div className="h-[240px] w-full border-2 border-slate-50 rounded-[2.5rem] p-8 bg-slate-50/30">
                   {selectedModel.efficiencyCurve ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={selectedModel.efficiencyCurve}>

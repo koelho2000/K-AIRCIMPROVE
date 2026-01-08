@@ -68,7 +68,7 @@ export const LoadDiagrams: React.FC<Props> = ({ project, results }) => {
       return fullTable.slice(0, 24).map(d => ({ label: `${d.h % 24}h`, Base: d.base, Proposto: d.prop }));
     }
     if (view === 'Weekly') {
-      return fullTable.slice(0, 168).filter((_, i) => i % 2 === 0).map(d => ({ label: `D${Math.floor(d.h/24)+1} ${d.h%24}h`, Base: d.base, Proposto: d.prop }));
+      return fullTable.slice(0, 168).filter((_, i) => i % 1 === 0).map(d => ({ label: `D${Math.floor(d.h/24)+1} ${d.h%24}h`, Base: d.base, Proposto: d.prop }));
     }
     if (view === 'Monthly') {
       const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -83,15 +83,27 @@ export const LoadDiagrams: React.FC<Props> = ({ project, results }) => {
         return { label: m, Base: baseKWh / 1000, Proposto: propKWh / 1000 };
       });
     }
-    // Annual: Cronológico (365 pontos - média diária)
-    return Array.from({ length: 365 }, (_, i) => {
-      const start = i * 24;
-      const end = (i + 1) * 24;
-      const slice = fullTable.slice(start, end);
-      const baseAvg = slice.reduce((a, b) => a + b.base, 0) / 24;
-      const propAvg = slice.reduce((a, b) => a + b.prop, 0) / 24;
-      return { label: `D${i+1}`, Base: baseAvg, Proposto: propAvg };
-    });
+    if (view === 'Annual') {
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      let currentHour = 0;
+      const monthMarkers = daysInMonth.map((days, i) => {
+        const marker = currentHour;
+        currentHour += days * 24;
+        return { hour: marker, name: months[i] };
+      });
+
+      return fullTable.map(d => {
+        const marker = monthMarkers.find(m => m.hour === d.h);
+        return {
+          label: marker ? marker.name : '',
+          Base: d.base,
+          Proposto: d.prop,
+          fullLabel: `Hora ${d.h}`
+        };
+      });
+    }
+    return [];
   }, [view, fullTable]);
 
   const stats = useMemo(() => {
@@ -154,7 +166,7 @@ export const LoadDiagrams: React.FC<Props> = ({ project, results }) => {
               onClick={() => setView(t)} 
               className={`px-8 py-2.5 rounded-xl text-[10px] font-black transition-all ${view === t ? 'bg-white text-blue-600 shadow-md' : 'text-slate-500 hover:bg-white/50'}`}
             >
-              {t === 'Annual' ? 'PERFIL ANUAL' : t === 'Monthly' ? 'CONSUMO MENSAL' : t.toUpperCase()}
+              {t === 'Annual' ? 'CRONOGRAMA 8760H' : t === 'Monthly' ? 'CONSUMO MENSAL' : t.toUpperCase()}
             </button>
           ))}
         </div>
@@ -198,26 +210,36 @@ export const LoadDiagrams: React.FC<Props> = ({ project, results }) => {
                 <linearGradient id="colorProp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/></linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="label" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontWeight: 800}} />
+              <XAxis 
+                dataKey="label" 
+                fontSize={9} 
+                axisLine={false} 
+                tickLine={false} 
+                interval={view === 'Annual' ? 0 : 'preserveStartEnd'}
+                tick={{fill: '#64748b', fontWeight: 800}} 
+              />
               <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontWeight: 800}} unit=" kW" />
-              <Tooltip contentStyle={{borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}} />
+              <Tooltip 
+                contentStyle={{borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}} 
+                labelFormatter={(label, payload) => payload[0]?.payload?.fullLabel || label}
+              />
               <Area 
-                type={view === 'Annual' ? 'monotone' : 'stepAfter'} 
+                type="stepAfter" 
                 dataKey="Base" 
                 stroke="#ef4444" 
                 fill="url(#colorBase)" 
-                strokeWidth={3} 
+                strokeWidth={view === 'Annual' ? 1 : 3} 
                 name="Auditado" 
-                animationDuration={1200} 
+                isAnimationActive={view !== 'Annual'} 
               />
               <Area 
-                type={view === 'Annual' ? 'monotone' : 'stepAfter'} 
+                type="stepAfter" 
                 dataKey="Proposto" 
                 stroke="#3b82f6" 
                 fill="url(#colorProp)" 
-                strokeWidth={3} 
+                strokeWidth={view === 'Annual' ? 1 : 3} 
                 name="Proposto" 
-                animationDuration={1200} 
+                isAnimationActive={view !== 'Annual'} 
               />
             </AreaChart>
           )}

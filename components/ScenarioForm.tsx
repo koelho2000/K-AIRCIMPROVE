@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { ScenarioData, CompressorType, CompressorModel, ProfileType } from '../types';
 import { COMPRESSOR_DATABASE } from '../utils/compressors';
-import { Clock, Zap, Gauge, Box, Droplet, Layout, AlertCircle, Settings, ChevronRight, Library, Sparkles, TrendingUp, Calendar } from 'lucide-react';
+import { Clock, Zap, Gauge, Box, Droplet, Layout, AlertCircle, Settings, ChevronRight, Library, Sparkles, TrendingUp, Calendar, Activity, Lightbulb, BrainCircuit, HelpCircle, Copy } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -12,6 +12,8 @@ interface Props {
   onModelSelect?: (model: CompressorModel) => void;
   onNavigateToDatabase?: () => void;
   onSuggestBest?: () => void;
+  onSuggestStrategy?: () => void;
+  onCopyFromBase?: () => void;
   isProposed?: boolean;
 }
 
@@ -30,6 +32,8 @@ export const ScenarioForm: React.FC<Props> = ({
   onModelSelect, 
   onNavigateToDatabase,
   onSuggestBest,
+  onSuggestStrategy,
+  onCopyFromBase,
   isProposed 
 }) => {
   const handleChange = (field: keyof ScenarioData, value: any) => {
@@ -61,7 +65,6 @@ export const ScenarioForm: React.FC<Props> = ({
     onChange({ ...data, [field]: newValue });
   };
 
-  // Real-time local calculation for quick metrics display
   const metrics = useMemo(() => {
     const pressureFactor = 1 + (data.pressureBar - 7) * 0.07;
     const powerLoadAdjusted = data.powerLoadKW * pressureFactor;
@@ -72,7 +75,8 @@ export const ScenarioForm: React.FC<Props> = ({
     
     return {
       daily: dailyEnergy,
-      annual: annualEnergy
+      annual: annualEnergy,
+      flowM3Min: data.flowLS * 0.06
     };
   }, [data]);
 
@@ -90,7 +94,6 @@ export const ScenarioForm: React.FC<Props> = ({
           {title}
         </h3>
         
-        {/* Real-time Consumption Dashboard */}
         <div className="flex items-center gap-3">
            <div className="px-6 py-3 bg-slate-900 text-white rounded-2xl flex items-center gap-4 shadow-xl shadow-slate-900/10">
               <div className="text-center">
@@ -103,24 +106,14 @@ export const ScenarioForm: React.FC<Props> = ({
                  <p className="text-lg font-black leading-none">{(metrics.annual / 1000).toFixed(1)} <span className="text-[10px] opacity-40">MWh</span></p>
               </div>
            </div>
-           <span className="hidden lg:inline-block px-4 py-1.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Engine</span>
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 flex-1">
-        {/* Coluna Esquerda: Definição Técnica */}
         <div className="space-y-8">
            <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-4">
                 <p className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2"><Settings size={12}/> Seleção de Ativos OEM</p>
-                {isProposed && onNavigateToDatabase && (
-                  <button 
-                    onClick={onNavigateToDatabase}
-                    className="text-[9px] font-black text-slate-400 hover:text-blue-600 uppercase flex items-center gap-1 transition-colors"
-                  >
-                    <Library size={12}/> Ver Base de Dados
-                  </button>
-                )}
               </div>
 
               <div>
@@ -142,21 +135,37 @@ export const ScenarioForm: React.FC<Props> = ({
                 </div>
               </div>
 
-              {isProposed && onSuggestBest && (
-                <button 
-                  onClick={onSuggestBest}
-                  className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  <Sparkles size={14} className="animate-pulse"/>
-                  Sugerir Melhor Opção ✨
-                </button>
+              {isProposed && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={onSuggestBest}
+                      className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-500/10 hover:bg-blue-700 transition-all"
+                    >
+                      <Sparkles size={14}/>
+                      Sugerir Modelo ✨
+                    </button>
+                    <button 
+                      onClick={onSuggestStrategy}
+                      className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 hover:bg-emerald-700 transition-all"
+                    >
+                      <HelpCircle size={14}/>
+                      Ajuda & Estratégias IA 💡
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold px-1 italic text-center">A IA analisa o Cenário Base para orientar as suas escolhas de eficiência.</p>
+                </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 pt-2">
+              <div className="grid grid-cols-2 gap-4 pt-2">
                  <div>
-                    <label className={labelClass}><Gauge size={14} className="text-blue-500"/> Pressão de Serviço (bar)</label>
+                    <label className={labelClass}><Gauge size={14} className="text-blue-500"/> Pressão (bar)</label>
                     <input type="number" step="0.1" value={data.pressureBar} onChange={(e) => handleChange('pressureBar', parseFloat(e.target.value) || 0)} className={inputClass} />
-                    <p className="text-[9px] text-slate-400 mt-2 font-bold px-1 italic">Penalização Potência: {((data.pressureBar - 7) * 7).toFixed(1)}%</p>
+                 </div>
+                 <div>
+                    <label className={labelClass}><Activity size={14} className="text-blue-500"/> Caudal (L/s)</label>
+                    <input type="number" value={data.flowLS} onChange={(e) => handleChange('flowLS', parseFloat(e.target.value) || 0)} className={inputClass} />
+                    <p className="text-[9px] text-blue-600 mt-2 font-black px-1 italic">Conv: {metrics.flowM3Min.toFixed(2)} m³/min</p>
                  </div>
               </div>
            </div>
@@ -173,10 +182,21 @@ export const ScenarioForm: React.FC<Props> = ({
            </div>
         </div>
 
-        {/* Coluna Direita: Horários e Fugas */}
         <div className="space-y-8">
            <div className="p-8 bg-blue-50/30 rounded-[2rem] border border-blue-100 space-y-6">
-              <p className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2 mb-4 border-b border-blue-100 pb-2"><Layout size={12}/> Planeamento Operacional</p>
+              <div className="flex items-center justify-between mb-4 border-b border-blue-100 pb-2">
+                <p className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2"><Layout size={12}/> Planeamento Operacional</p>
+                {isProposed && onCopyFromBase && (
+                  <button 
+                    onClick={onCopyFromBase}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-white border border-blue-200 rounded-lg text-[8px] font-black text-blue-600 uppercase hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                    title="Copiar horário e dias do cenário base"
+                  >
+                    <Copy size={10}/>
+                    Copiar do Base
+                  </button>
+                )}
+              </div>
               <div>
                 <label className={labelClass}>Perfil de Horário Diário</label>
                 <select className={inputClass} value={data.profileType} onChange={(e) => handleChange('profileType', e.target.value)}>
@@ -215,19 +235,14 @@ export const ScenarioForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Quick Summary Footer */}
       <div className="mt-12 flex gap-4 overflow-x-auto pb-2">
          <div className="shrink-0 p-5 bg-slate-50 rounded-3xl border border-slate-100 min-w-[200px]">
-            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Custo Est. (Dia)</p>
-            <p className="text-xl font-black text-slate-800">Cálculo Ativo...</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Caudal Útil (Audit)</p>
+            <p className="text-xl font-black text-slate-800">{(data.flowLS * (1 - data.leakPercentage/100)).toFixed(1)} L/s</p>
          </div>
          <div className="shrink-0 p-5 bg-slate-50 rounded-3xl border border-slate-100 min-w-[200px]">
-            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Eficiência Relativa</p>
-            <p className="text-xl font-black text-slate-800">ISO 50001 Ref.</p>
-         </div>
-         <div className="shrink-0 p-5 bg-slate-50 rounded-3xl border border-slate-100 min-w-[200px]">
-            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Caudal Útil</p>
-            <p className="text-xl font-black text-slate-800">{(data.flowLS * (1 - data.leakPercentage/100)).toFixed(1)} l/s</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Caudal Nominal (m³/min)</p>
+            <p className="text-xl font-black text-blue-600">{metrics.flowM3Min.toFixed(2)} m³/min</p>
          </div>
       </div>
     </div>

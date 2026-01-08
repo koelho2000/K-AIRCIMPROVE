@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { ProjectData, CalculatedResults, BudgetItem, BudgetCategory, CompressorModel, BUDGET_CHAPTERS, BudgetChapter } from './types';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ProjectData, CalculatedResults, BudgetItem, BudgetCategory, CompressorModel, BUDGET_CHAPTERS, BudgetChapter, ScenarioData } from './types';
 import { getResults } from './utils/calculations';
 import { PREDEFINED_MEASURES } from './utils/measures';
 import { COMPRESSOR_DATABASE } from './utils/compressors';
@@ -8,10 +8,12 @@ import { ScenarioForm } from './components/ScenarioForm';
 import { Report } from './components/Report';
 import { LoadDiagrams } from './components/LoadDiagrams';
 import { CompressorDatabaseView } from './components/CompressorDatabaseView';
+import { HelpModal } from './components/HelpModal';
+import { AIAdvisorModal, AIAdvisorData } from './components/AIAdvisorModal';
 import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Save, FolderOpen, FileText, Calculator, ArrowRight, TrendingDown,
-  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope
+  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle
 } from 'lucide-react';
 
 const INITIAL_PROJECT: ProjectData = {
@@ -65,8 +67,27 @@ const App: React.FC = () => {
   const [step, setStep] = useState<EditorStep>('project');
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set([BUDGET_CHAPTERS[0], BUDGET_CHAPTERS[2]]));
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showAIAdvisor, setShowAIAdvisor] = useState(false);
+  const [aiAdvisorData, setAIAdvisorData] = useState<AIAdvisorData | null>(null);
+  
+  // Controle de "Orçamento Desatualizado"
+  const [lastBaseForBudget, setLastBaseForBudget] = useState<string>(JSON.stringify(INITIAL_PROJECT.baseScenario));
+  const [isBudgetDirty, setIsBudgetDirty] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lógica de Sincronização e Bloqueio de Medidas baseada na diferenciação técnica
+  // Monitorar alterações no Cenário Base para marcar orçamento como sujo
+  useEffect(() => {
+    const currentBaseStr = JSON.stringify(project.baseScenario);
+    if (currentBaseStr !== lastBaseForBudget) {
+      setIsBudgetDirty(true);
+    } else {
+      setIsBudgetDirty(false);
+    }
+  }, [project.baseScenario, lastBaseForBudget]);
+
+  // Lógica de Sincronização e Bloqueio de Medidas
   useEffect(() => {
     const forcedIds: string[] = [];
     if (project.proposedScenario.pressureBar < project.baseScenario.pressureBar) forcedIds.push('pressure_reduction');
@@ -100,6 +121,89 @@ const App: React.FC = () => {
 
   const results = useMemo(() => getResults(project), [project]);
 
+  // Função para atualização rigorosa do orçamento
+  const handleUpdateBudget = () => {
+    setIsSuggesting(true);
+    // Simular processamento técnico
+    setTimeout(() => {
+      setProject(prev => {
+        // 1. Identificar medidas que precisam de ser re-aplicadas
+        const currentMeasures = PREDEFINED_MEASURES.filter(m => prev.selectedMeasureIds.includes(m.id));
+        
+        // 2. Limpar itens de orçamento vinculados a medidas automáticas para garantir rigor
+        // Mas manter itens personalizados (sem measureId)
+        let updatedBudget = prev.budgetItems.filter(item => !item.measureId);
+        
+        // 3. Re-aplicar templates baseados no novo estado técnico
+        currentMeasures.forEach(m => {
+          m.defaultBudgetTemplates.forEach(t => {
+            let finalUnitPrice = t.unitPrice;
+            
+            // Ajuste rigoroso: se for instalação de compressor e tivermos um modelo selecionado com preço
+            if (m.id === 'vsd_install' && t.category === 'Equipamento') {
+              const model = COMPRESSOR_DATABASE.find(cd => cd.id === prev.proposedScenario.selectedModelId);
+              if (model) finalUnitPrice = model.estimatedPrice;
+            }
+
+            updatedBudget.push({
+              ...t,
+              id: Math.random().toString(36).substr(2, 9),
+              measureId: m.id,
+              unitPrice: finalUnitPrice,
+              total: t.quantity * finalUnitPrice
+            });
+          });
+        });
+
+        return { ...prev, budgetItems: updatedBudget };
+      });
+      
+      setLastBaseForBudget(JSON.stringify(project.baseScenario));
+      setIsBudgetDirty(false);
+      setIsSuggesting(false);
+      alert("Orçamento atualizado com sucesso com base nos novos parâmetros técnicos do Cenário Base.");
+    }, 800);
+  };
+
+  // Persistência de Ficheiro
+  const handleSaveProject = () => {
+    const dataStr = JSON.stringify(project, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const fileName = `K-AIR_${project.clientName.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOpenProject = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        if (json.clientName && json.baseScenario && json.proposedScenario) {
+          setProject(json);
+          setStep('project');
+          setLastBaseForBudget(JSON.stringify(json.baseScenario));
+          alert('Projeto carregado com sucesso!');
+        } else {
+          alert('Erro: O ficheiro selecionado não parece ser um projeto válido do K-AIRCIMPROVE.');
+        }
+      } catch (err) {
+        alert('Erro ao ler o ficheiro de projeto.');
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleModelSelect = (scenario: 'base' | 'proposed', model: CompressorModel) => {
     const target = scenario === 'base' ? project.baseScenario : project.proposedScenario;
     const updated = {
@@ -111,26 +215,27 @@ const App: React.FC = () => {
       powerUnloadKW: model.type === 'Parafuso VSD' ? model.nominalPowerKW * 0.15 : model.nominalPowerKW * 0.35
     };
     setProject(prev => ({ ...prev, [scenario === 'base' ? 'baseScenario' : 'proposedScenario']: updated }));
+    
+    // Se selecionamos um modelo para o proposto, avisar que o orçamento pode precisar de refresh se o preço mudou
+    if (scenario === 'proposed') {
+      setIsBudgetDirty(true);
+    }
   };
 
   const handleSuggestBest = async () => {
     setIsSuggesting(true);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    // Cálculo do Caudal Útil real necessário (Ar produzido - Fugas)
     const usefulFlowBase = project.baseScenario.flowLS * (1 - project.baseScenario.leakPercentage / 100);
     const hoursUnload = project.baseScenario.hoursUnloadPerDay;
-    const hoursLoad = project.baseScenario.hoursLoadPerDay;
 
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: `Analise as métricas de auditoria industrial e sugira o compressor OEM ideal:
 - Caudal Útil Necessário: ${usefulFlowBase.toFixed(1)} L/s.
-- Horas em Vazio Atuais: ${hoursUnload}h/dia (Desperdício crítico detectado se > 1h).
-- Pressão Alvo: ${project.proposedScenario.pressureBar} bar.
+- Horas em Vazio Atuais: ${hoursUnload}h/dia.
 - Base OEM: ${JSON.stringify(COMPRESSOR_DATABASE.map(m => ({ id: m.id, brand: m.brand, model: m.model, kw: m.nominalPowerKW, flow: m.flowLS, type: m.type })))}
-Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em vazio superior a 15% do tempo de carga. Retorne JSON {modelId, justification}.`,
+Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 15% do tempo. Retorne JSON {modelId, justification}.`,
         config: {
           responseMimeType: 'application/json',
           responseSchema: {
@@ -151,19 +256,90 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
         alert(`SUGESTÃO IA:\n${model.brand} ${model.model}\n\nMotivo: ${data.justification}`);
       }
     } catch (err) {
-      alert('Falha na conexão IA. Selecione manualmente na Base OEM.');
+      alert('Falha na conexão IA.');
     } finally {
       setIsSuggesting(false);
     }
   };
 
-  const toggleMeasure = (measureId: string) => {
-    const isPressureForced = measureId === 'pressure_reduction' && project.proposedScenario.pressureBar < project.baseScenario.pressureBar;
-    const isLeakForced = measureId === 'leak_repair' && project.proposedScenario.leakPercentage < project.baseScenario.leakPercentage;
-    const isVsdForced = measureId === 'vsd_install' && (project.proposedScenario.compressorType === 'Parafuso VSD' && project.baseScenario.compressorType !== 'Parafuso VSD');
+  const handleSuggestStrategy = async () => {
+    setIsSuggesting(true);
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
+        contents: `Como um especialista em ar comprimido e eficiência energética, analise os dados deste Cenário Base (Auditado) e proponha estratégias para o Cenário Proposto:
+        DADOS AUDITADOS:
+        - Compressor: ${project.baseScenario.compressorType}
+        - Potência Carga: ${project.baseScenario.powerLoadKW} kW
+        - Potência Vazio: ${project.baseScenario.powerUnloadKW} kW
+        - Horas Carga/Dia: ${project.baseScenario.hoursLoadPerDay}h
+        - Horas Vazio/Dia: ${project.baseScenario.hoursUnloadPerDay}h
+        - Pressão: ${project.baseScenario.pressureBar} bar
+        - Fugas: ${project.baseScenario.leakPercentage}%
+        
+        OBJETIVO: Propor 4 estratégias (Categorias: pressure, leaks, technology, operational).
+        Retorne em JSON estruturado com overview, estratégias (title, description, impact, technicalReason, category) e technicalAdvice final.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              overview: { type: Type.STRING },
+              strategies: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    impact: { type: Type.STRING },
+                    technicalReason: { type: Type.STRING },
+                    category: { type: Type.STRING }
+                  },
+                  required: ['title', 'description', 'impact', 'technicalReason', 'category']
+                }
+              },
+              technicalAdvice: { type: Type.STRING }
+            },
+            required: ['overview', 'strategies', 'technicalAdvice']
+          }
+        }
+      });
 
-    if (isPressureForced || isLeakForced || isVsdForced) {
-      alert("Bloqueio Técnico: Esta medida é intrínseca às melhorias definidas. Altere os valores no cenário proposto para remover.");
+      const data = JSON.parse(response.text || '{}') as AIAdvisorData;
+      setAIAdvisorData(data);
+      setShowAIAdvisor(true);
+    } catch (err) {
+      alert('Erro ao gerar consultoria IA. Verifique a ligação.');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
+  const handleCopyOperationalFromBase = () => {
+    setProject(prev => ({
+      ...prev,
+      proposedScenario: {
+        ...prev.proposedScenario,
+        profileType: prev.baseScenario.profileType,
+        loadStartTime: prev.baseScenario.loadStartTime,
+        hoursLoadPerDay: prev.baseScenario.hoursLoadPerDay,
+        hoursUnloadPerDay: prev.baseScenario.hoursUnloadPerDay,
+        daysPerWeek: prev.baseScenario.daysPerWeek,
+        weeksPerYear: prev.baseScenario.weeksPerYear,
+      }
+    }));
+  };
+
+  const toggleMeasure = (measureId: string) => {
+    const isForced = (measureId === 'pressure_reduction' && project.proposedScenario.pressureBar < project.baseScenario.pressureBar) || 
+                     (measureId === 'leak_repair' && project.proposedScenario.leakPercentage < project.baseScenario.leakPercentage) || 
+                     (measureId === 'vsd_install' && (project.proposedScenario.compressorType === 'Parafuso VSD' && project.baseScenario.compressorType !== 'Parafuso VSD'));
+
+    if (isForced) {
+      alert("Bloqueio Técnico: Esta medida é intrínseca às melhorias definidas.");
       return;
     }
 
@@ -194,6 +370,7 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
         budgetItems: newBudgetItems
       }));
     }
+    setIsBudgetDirty(true);
   };
 
   const updateBudgetItem = (id: string, field: keyof BudgetItem, value: any) => {
@@ -244,10 +421,28 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900">
       <header className="no-print bg-slate-900 text-white px-8 py-4 flex items-center justify-between sticky top-0 z-50 border-b border-slate-800 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic shadow-blue-500/20 shadow-lg">K</div>
-          <div><h1 className="text-xl font-bold tracking-tight leading-none mb-1 uppercase">K-AIRCIMPROVE</h1><p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Efficiency Audit Pro Suite</p></div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic shadow-blue-500/20 shadow-lg">K</div>
+            <div className="hidden sm:block"><h1 className="text-xl font-bold tracking-tight leading-none mb-1 uppercase">K-AIRCIMPROVE</h1><p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Efficiency Audit Pro Suite</p></div>
+          </div>
+          
+          <div className="h-10 w-px bg-slate-800 hidden md:block" />
+          
+          <div className="flex items-center gap-2">
+            <input type="file" ref={fileInputRef} onChange={handleOpenProject} accept=".json" className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight">
+              <FolderOpen size={16}/> Abrir
+            </button>
+            <button onClick={handleSaveProject} className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight shadow-lg shadow-blue-500/10">
+              <Save size={16}/> Gravar
+            </button>
+            <button onClick={() => setShowHelp(true)} className="p-2.5 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight ml-2">
+              <HelpCircle size={16}/> Ajuda
+            </button>
+          </div>
         </div>
+
         <nav className="flex bg-slate-800 p-1.5 rounded-2xl gap-1 shadow-inner">
           {[{ id: 'editor', label: 'EDITOR', icon: Calculator }, { id: 'database', label: 'BASE OEM', icon: Library }, { id: 'diagrams', label: 'DIAGRAMAS', icon: BarChart3 }, { id: 'report', label: 'RELATÓRIO', icon: FileText }].map(v => (
             <button key={v.id} onClick={() => setView(v.id as ViewMode)} className={`px-7 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2.5 ${view === v.id ? 'bg-blue-600 shadow-md text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
@@ -255,7 +450,8 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
             </button>
           ))}
         </nav>
-        <div className="text-right">
+
+        <div className="text-right hidden lg:block">
            <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter leading-none mb-1">Savings OPEX Anual</p>
            <p className="text-xl font-black text-emerald-400 leading-tight">{results.savingsEuro.toLocaleString()} €</p>
         </div>
@@ -314,38 +510,6 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 space-y-8">
-                     <h4 className="text-[11px] font-black uppercase text-slate-400 border-b pb-4">Fórmulas de Cálculo Aplicadas</h4>
-                     <div className="space-y-6">
-                        <div className="p-6 bg-slate-50 rounded-2xl space-y-2">
-                           <p className="text-[9px] font-black text-blue-600 uppercase">Energia de Carga Corrigida</p>
-                           <p className="font-mono text-sm font-bold">P_load_adj = P_nom * (1 + (P_bar - 7) * 0.07)</p>
-                        </div>
-                        <div className="p-6 bg-slate-50 rounded-2xl space-y-2">
-                           <p className="text-[9px] font-black text-blue-600 uppercase">Impacto das Fugas</p>
-                           <p className="font-mono text-sm font-bold">V_util = V_total * (1 - Leak_Perc / 100)</p>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 space-y-8">
-                     <h4 className="text-[11px] font-black uppercase text-slate-400 border-b pb-4">Etapas do Diagnóstico K-AIRCIMPROVE</h4>
-                     <div className="space-y-4">
-                        {[
-                          {step: "01", text: "Levantamento do Perfil de Carga (Medição Base)"},
-                          {step: "02", text: "Identificação de Desperdícios (Vazio e Fugas)"},
-                          {step: "03", text: "Simulação de Upgrade Tecnológico (VSD/Otimização)"},
-                          {step: "04", text: "Análise de Viabilidade Económica e ROI"}
-                        ].map(item => (
-                          <div key={item.step} className="flex items-center gap-5 p-4 hover:bg-slate-50 rounded-2xl transition-all">
-                             <span className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-xs">{item.step}</span>
-                             <span className="font-bold text-slate-700 text-sm">{item.text}</span>
-                          </div>
-                        ))}
-                     </div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -369,6 +533,21 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
               </div>
             )}
 
+            {step === 'base' && <ScenarioForm accentColor="bg-red-500" title="Cenário Base (Auditado)" data={project.baseScenario} onChange={s=>setProject({...project, baseScenario:s})} onModelSelect={m=>handleModelSelect('base', m)}/>}
+            {step === 'proposed' && (
+              <ScenarioForm 
+                accentColor="bg-emerald-500" 
+                title="Cenário Proposto" 
+                data={project.proposedScenario} 
+                onChange={s=>setProject({...project, proposedScenario:s})} 
+                onModelSelect={m=>handleModelSelect('proposed', m)} 
+                onSuggestBest={handleSuggestBest} 
+                onSuggestStrategy={handleSuggestStrategy}
+                onCopyFromBase={handleCopyOperationalFromBase}
+                isProposed={true}
+              />
+            )}
+            
             {step === 'results' && (
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
@@ -398,104 +577,122 @@ Instrução: Priorize obrigatoriamente 'Parafuso VSD' se houver desperdício em 
                          <span className="text-sm font-black uppercase tracking-widest opacity-60">Poupança Anual</span>
                          <span className="text-3xl font-black">{results.savingsEuro.toLocaleString()} € / Ano</span>
                       </div>
-                      <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 flex justify-between items-center">
-                         <div className="text-left">
-                            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Volume Ar Útil</p>
-                            <p className="text-2xl font-black text-slate-800">{results.proposedVolumeM3.toLocaleString()} m³/Ano</p>
-                         </div>
-                         <div className="text-right">
-                            <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Payback (PRI)</p>
-                            <p className="text-2xl font-black text-blue-600">{results.paybackYears.toFixed(1)} Anos</p>
-                         </div>
-                      </div>
                    </div>
                 </div>
               </div>
             )}
 
-            {step === 'base' && <ScenarioForm accentColor="bg-red-500" title="Cenário Base (Auditado)" data={project.baseScenario} onChange={s=>setProject({...project, baseScenario:s})} onModelSelect={m=>handleModelSelect('base', m)}/>}
-            {step === 'proposed' && <ScenarioForm accentColor="bg-emerald-500" title="Cenário Proposto" data={project.proposedScenario} onChange={s=>setProject({...project, proposedScenario:s})} onModelSelect={m=>handleModelSelect('proposed', m)} onSuggestBest={handleSuggestBest} isProposed={true}/>}
-            
             {step === 'budget' && (
-              <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
-                <div className="flex justify-between items-center mb-12">
-                  <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Plano de Investimento (CAPEX)</h3>
-                  <div className="px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-900/10"><p className="text-[10px] font-black uppercase opacity-50">Total Geral</p><p className="text-2xl font-black text-blue-400">{results.capexTotal.toLocaleString()} €</p></div>
-                </div>
-                <div className="space-y-6">
-                  {BUDGET_CHAPTERS.map((chapter) => {
-                    const items = project.budgetItems.filter(i => i.chapter === chapter);
-                    const isExpanded = expandedChapters.has(chapter);
-                    const chapterTotal = items.reduce((a, b) => a + b.total, 0);
-                    return (
-                      <div key={chapter} className="border border-slate-100 rounded-[2rem] overflow-hidden bg-slate-50/30">
-                        <button onClick={() => toggleChapter(chapter)} className={`w-full flex items-center justify-between p-8 transition-colors ${isExpanded ? 'bg-white border-b shadow-sm' : 'hover:bg-white'}`}>
-                          <div className="flex items-center gap-4 text-left">
-                            <ChevronRightIcon size={20} className={`text-blue-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}/>
-                            <p className="font-black text-slate-900 uppercase text-sm tracking-tight">{chapter}</p>
-                          </div>
-                          <p className="text-lg font-black text-slate-900">{chapterTotal.toLocaleString()} €</p>
-                        </button>
-                        {isExpanded && (
-                          <div className="p-8 space-y-4 animate-in slide-in-from-top-4">
-                            {items.map(item => (
-                              <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                                <input value={item.description} onChange={e=>updateBudgetItem(item.id, 'description', e.target.value)} className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700"/>
-                                <div className="flex items-center gap-4">
-                                  <div className="text-right"><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Qtd</p><input type="number" value={item.quantity} onChange={e=>updateBudgetItem(item.id, 'quantity', parseFloat(e.target.value))} className="w-16 text-center bg-slate-50 rounded p-1 font-black outline-none border-b-2 border-transparent focus:border-blue-500"/></div>
-                                  <div className="text-right"><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Unit (€)</p><input type="number" value={item.unitPrice} onChange={e=>updateBudgetItem(item.id, 'unitPrice', parseFloat(e.target.value))} className="w-24 text-right bg-slate-50 rounded p-1 font-black outline-none border-b-2 border-transparent focus:border-blue-500"/></div>
-                                  <div className="text-right min-w-[80px]"><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Total</p><span className="font-black text-slate-900">{item.total.toLocaleString()} €</span></div>
-                                  <button onClick={()=>setProject({...project, budgetItems: project.budgetItems.filter(i=>i.id !== item.id)})} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
-                                </div>
-                              </div>
-                            ))}
-                            <button onClick={() => addLineToChapter(chapter)} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black text-slate-400 uppercase hover:text-blue-600 hover:border-blue-200 transition-all">+ Adicionar Artigo ao Orçamento</button>
-                          </div>
-                        )}
+              <div className="space-y-8">
+                {isBudgetDirty && (
+                  <div className="bg-amber-50 border-l-8 border-amber-500 p-8 rounded-[2rem] shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-6">
+                      <div className="p-4 bg-amber-100 rounded-2xl text-amber-600">
+                        <AlertTriangle size={32} />
                       </div>
-                    );
-                  })}
+                      <div>
+                        <h4 className="text-xl font-black text-amber-900 uppercase tracking-tight">Orçamento Desatualizado</h4>
+                        <p className="text-sm text-amber-700 font-medium">O Cenário Base foi alterado. É necessário recalcular o plano de investimento para garantir rigor técnico.</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleUpdateBudget}
+                      className="px-8 py-4 bg-amber-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-amber-700 transition-all shadow-xl shadow-amber-600/20 active:scale-95 whitespace-nowrap"
+                    >
+                      <RefreshCw size={18} />
+                      Atualizar Orçamento
+                    </button>
+                  </div>
+                )}
+
+                <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
+                  <div className="flex justify-between items-center mb-12">
+                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Plano de Investimento (CAPEX)</h3>
+                    <div className="px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-900/10"><p className="text-[10px] font-black uppercase opacity-50">Total Geral</p><p className="text-2xl font-black text-blue-400">{results.capexTotal.toLocaleString()} €</p></div>
+                  </div>
+                  <div className="space-y-6">
+                    {BUDGET_CHAPTERS.map((chapter) => {
+                      const items = project.budgetItems.filter(i => i.chapter === chapter);
+                      const isExpanded = expandedChapters.has(chapter);
+                      const chapterTotal = items.reduce((a, b) => a + b.total, 0);
+                      return (
+                        <div key={chapter} className="border border-slate-100 rounded-[2rem] overflow-hidden bg-slate-50/30">
+                          <button onClick={() => toggleChapter(chapter)} className={`w-full flex items-center justify-between p-8 transition-colors ${isExpanded ? 'bg-white border-b shadow-sm' : 'hover:bg-white'}`}>
+                            <div className="flex items-center gap-4 text-left">
+                              <ChevronRightIcon size={20} className={`text-blue-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}/>
+                              <p className="font-black text-slate-900 uppercase text-sm tracking-tight">{chapter}</p>
+                            </div>
+                            <p className="text-lg font-black text-slate-900">{chapterTotal.toLocaleString()} €</p>
+                          </button>
+                          {isExpanded && (
+                            <div className="p-8 space-y-4 animate-in slide-in-from-top-4">
+                              {items.map(item => (
+                                <div key={item.id} className="flex gap-4 items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                  <input value={item.description} onChange={e=>updateBudgetItem(item.id, 'description', e.target.value)} className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700"/>
+                                  <div className="flex items-center gap-4">
+                                    <div className="text-right min-w-[80px]"><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Total</p><span className="font-black text-slate-900">{item.total.toLocaleString()} €</span></div>
+                                    <button onClick={()=>setProject({...project, budgetItems: project.budgetItems.filter(i=>i.id !== item.id)})} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
             {step === 'financial' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                  <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-blue-600">
-                    <TrendingUp className="text-blue-400 mb-8" size={40}/>
-                    <p className="text-[11px] font-black uppercase opacity-50 mb-3 tracking-[0.2em]">Investimento CAPEX</p>
-                    <p className="text-5xl font-black">{results.capexTotal.toLocaleString()} €</p>
-                  </div>
-                  <div className="bg-emerald-600 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-emerald-400">
-                    <TrendingDown className="text-white mb-8" size={40}/>
-                    <p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-[0.2em]">Fluxo Poupança Anual</p>
-                    <p className="text-5xl font-black">{results.savingsEuro.toLocaleString()} €</p>
-                  </div>
-                  <div className="bg-white p-12 rounded-[3.5rem] shadow-xl border border-slate-100 flex flex-col justify-center border-b-8 border-blue-500">
-                    <Clock className="text-blue-600 mb-8" size={40}/>
-                    <p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-[0.2em]">Período de Retorno</p>
-                    <p className="text-5xl font-black text-slate-900">{results.paybackYears.toFixed(1)} <span className="text-lg">Anos</span></p>
-                  </div>
+                <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-blue-600">
+                  <TrendingUp className="text-blue-400 mb-8" size={40}/>
+                  <p className="text-[11px] font-black uppercase opacity-50 mb-3 tracking-[0.2em]">Investimento CAPEX</p>
+                  <p className="text-5xl font-black">{results.capexTotal.toLocaleString()} €</p>
+                </div>
+                <div className="bg-emerald-600 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-emerald-400">
+                  <TrendingDown className="text-white mb-8" size={40}/>
+                  <p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-[0.2em]">Fluxo Poupança Anual</p>
+                  <p className="text-5xl font-black">{results.savingsEuro.toLocaleString()} €</p>
+                </div>
+                <div className="bg-white p-12 rounded-[3.5rem] shadow-xl border border-slate-100 flex flex-col justify-center border-b-8 border-blue-500">
+                  <Clock className="text-blue-600 mb-8" size={40}/>
+                  <p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-[0.2em]">Período de Retorno</p>
+                  <p className="text-5xl font-black text-slate-900">{results.paybackYears.toFixed(1)} <span className="text-lg">Anos</span></p>
+                </div>
               </div>
             )}
           </div>
         )}
 
-        {view === 'database' && <CompressorDatabaseView />}
+        {view === 'database' && (
+          <CompressorDatabaseView 
+            onSelectForProposed={(model) => {
+              handleModelSelect('proposed', model);
+              setView('editor');
+              setStep('proposed');
+            }} 
+          />
+        )}
         {view === 'diagrams' && <div className="max-w-7xl mx-auto w-full p-8"><LoadDiagrams project={project} results={results} /></div>}
         {view === 'report' && <div className="report-container p-4 animate-in zoom-in-95 duration-700"><Report project={project} results={results} /></div>}
       </main>
 
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <AIAdvisorModal isOpen={showAIAdvisor} onClose={() => setShowAIAdvisor(false)} data={aiAdvisorData} />
+
       {isSuggesting && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center">
-           <div className="bg-white p-12 rounded-[3rem] shadow-2xl flex flex-col items-center gap-8 max-w-md text-center border-t-8 border-blue-600">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[120] flex items-center justify-center">
+           <div className="bg-white p-12 rounded-[3rem] shadow-2xl flex flex-col items-center gap-8 max-w-md text-center border-t-8 border-emerald-600">
               <div className="relative">
-                <Loader2 className="text-blue-600 animate-spin" size={64}/>
-                <Sparkles className="absolute top-0 right-0 text-blue-400 animate-pulse" size={24}/>
+                <Loader2 className="text-emerald-600 animate-spin" size={64}/>
+                <BrainCircuit className="absolute top-0 right-0 text-emerald-400 animate-pulse" size={24}/>
               </div>
               <div>
-                <h4 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Análise IA em Curso</h4>
-                <p className="text-slate-500 font-medium leading-relaxed">Cruzando dados de caudal útil e horas de vazio para determinar o compressor com a melhor curva de rendimento SEC.</p>
+                <h4 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Processando Técnico</h4>
+                <p className="text-slate-500 font-medium leading-relaxed">O sistema está a aplicar as diretrizes do ADENE para recalcular os vetores de investimento com rigor.</p>
               </div>
            </div>
         </div>
