@@ -4,7 +4,7 @@ import { ProjectData, CalculatedResults, BudgetItem, BUDGET_CHAPTERS } from '../
 import { PREDEFINED_MEASURES } from '../utils/measures';
 import { generateDailyProfile } from './LoadDiagrams';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer, ShieldCheck, Leaf, Scale, Activity, Microscope } from 'lucide-react';
+import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer, ShieldCheck, Leaf, Scale, Activity, Microscope, Building2, Fingerprint } from 'lucide-react';
 
 interface Props {
   project: ProjectData;
@@ -84,28 +84,38 @@ export const Report: React.FC<Props> = ({ project, results }) => {
         {/* 1. CAPA */}
         <div className={pageClass}>
           <div className="h-full border-[10px] border-slate-900 p-16 flex flex-col justify-between items-center text-center flex-1">
-            <div className="mt-20">
-              <div className="w-48 h-48 bg-slate-900 text-white flex items-center justify-center text-8xl font-black italic mx-auto rounded-[3rem] shadow-2xl mb-12">K</div>
-              <h2 className="text-2xl font-light text-slate-500 uppercase tracking-[0.5em] mb-6">Eficiência em Sistemas de Ar</h2>
-              <h1 className="text-6xl font-black text-slate-900 leading-[1.1] uppercase tracking-tighter">DIAGNÓSTICO ENERGÉTICO</h1>
-              <div className="w-32 h-2.5 bg-blue-600 mx-auto mt-14 rounded-full"></div>
+            <div className="mt-10">
+              <div className="w-40 h-40 bg-slate-900 text-white flex items-center justify-center text-7xl font-black italic mx-auto rounded-[2.5rem] shadow-2xl mb-8">K</div>
+              <h2 className="text-xl font-light text-slate-500 uppercase tracking-[0.4em] mb-4">Eficiência em Sistemas de Ar</h2>
+              <h1 className="text-5xl font-black text-slate-900 leading-[1.1] uppercase tracking-tighter">DIAGNÓSTICO ENERGÉTICO</h1>
+              <div className="mt-6 flex items-center justify-center gap-3">
+                <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-2"><Fingerprint size={12}/> Ref: {project.projectReference}</span>
+              </div>
+              <div className="w-24 h-2 bg-blue-600 mx-auto mt-10 rounded-full"></div>
             </div>
-            <div className="space-y-12">
+            
+            <div className="space-y-10 w-full">
               <div>
-                <p className="text-[12px] uppercase tracking-[0.4em] text-slate-400 font-black mb-4">Cliente e Instalação</p>
-                <p className="text-5xl font-black text-slate-800 tracking-tight">{project.clientName}</p>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-black mb-3">Cliente e Instalação</p>
+                <p className="text-4xl font-black text-slate-800 tracking-tight">{project.clientName}</p>
               </div>
-              <div className="flex flex-col gap-3">
-                <p className="text-2xl text-slate-600 font-bold">{project.installation}</p>
-                <p className="text-xl text-slate-400 font-medium flex items-center justify-center gap-2"><MapPin size={20}/> {project.location}</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-xl text-slate-600 font-bold">{project.installation}</p>
+                <p className="text-base text-slate-400 font-medium flex items-center justify-center gap-2"><MapPin size={16}/> {project.location}</p>
               </div>
             </div>
-            <div className="w-full border-t border-slate-100 pt-12 flex justify-between items-end">
+
+            <div className="w-full border-t border-slate-100 pt-10 flex justify-between items-end">
               <div className="text-left">
+                <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-1">Empresa Auditora</p>
+                <p className="text-slate-900 text-xl font-black uppercase tracking-tight mb-4 flex items-center gap-2"><Building2 size={18} className="text-blue-600"/> {project.auditorCompany}</p>
+                
                 <p className="text-blue-600 text-2xl font-black uppercase tracking-tight">{project.technicianName}</p>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Auditor Energético Especialista</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Auditor Energético Responsável</p>
               </div>
-              <p className="text-slate-400 font-mono text-lg">{project.date}</p>
+              <div className="text-right">
+                <p className="text-slate-400 font-mono text-base">{project.date}</p>
+              </div>
             </div>
           </div>
         </div>

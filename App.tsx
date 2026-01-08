@@ -13,7 +13,7 @@ import { AIAdvisorModal, AIAdvisorData } from './components/AIAdvisorModal';
 import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Save, FolderOpen, FileText, Calculator, ArrowRight, TrendingDown,
-  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus
+  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus, Building2, Fingerprint
 } from 'lucide-react';
 
 // Helper para inicializar o orçamento com rigor técnico no arranque e em atualizações
@@ -82,21 +82,10 @@ const INITIAL_BASE: ScenarioData = {
   maintenanceCostEuroPerYear: 1800
 };
 
+// Cenário proposto por defeito como introdução manual e igual ao base
 const INITIAL_PROPOSED: ScenarioData = {
-  compressorType: 'Parafuso VSD',
-  selectedModelId: 'ac-ga37vsd',
-  profileType: 'Turno Normal (08-17h)',
-  loadStartTime: 8,
-  hoursLoadPerDay: 14,
-  hoursUnloadPerDay: 0.5,
-  powerLoadKW: 37,
-  powerUnloadKW: 6,
-  flowLS: 125,
-  pressureBar: 7.0,
-  leakPercentage: 5,
-  daysPerWeek: 5,
-  weeksPerYear: 52,
-  maintenanceCostEuroPerYear: 1200
+  ...INITIAL_BASE,
+  selectedModelId: undefined, 
 };
 
 const INITIAL_MEASURES = ['vsd_install', 'leak_repair', 'pressure_reduction'];
@@ -106,7 +95,9 @@ const INITIAL_PROJECT: ProjectData = {
   installation: 'Unidade Industrial Porto',
   location: 'Maia, Porto',
   date: new Date().toISOString().split('T')[0],
-  technicianName: 'Eng. Ricardo Coelho',
+  technicianName: 'Engº José Coelho',
+  auditorCompany: 'Koelho2000',
+  projectReference: 'FO-XX-XX',
   energyCost: 0.145,
   selectedMeasureIds: INITIAL_MEASURES, 
   customMeasures: [],
@@ -406,8 +397,10 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-5 mb-12"><Database className="text-blue-600" size={32}/><h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Dados Gerais do Diagnóstico</h3></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Entidade Cliente</label><input value={project.clientName} onChange={e=>setProject({...project, clientName:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
+                  <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Fingerprint size={12}/> Referência do Projeto</label><input value={project.projectReference} onChange={e=>setProject({...project, projectReference:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
                   <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Instalação Fabril</label><input value={project.installation} onChange={e=>setProject({...project, installation:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
                   <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2"><MapPin size={12}/> Localização / Morada</label><input value={project.location} onChange={e=>setProject({...project, location:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
+                  <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Building2 size={12}/> Empresa Auditora</label><input value={project.auditorCompany} onChange={e=>setProject({...project, auditorCompany:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
                   <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Auditor Responsável</label><input value={project.technicianName} onChange={e=>setProject({...project, technicianName:e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-black text-xl text-slate-800"/></div>
                   <div className="space-y-3"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Custo Energético Base (€/kWh)</label><input type="number" step="0.0001" value={project.energyCost} onChange={e=>setProject({...project, energyCost:parseFloat(e.target.value) || 0})} className="w-full p-5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:border-blue-500 focus:bg-white transition-all font-mono text-xl font-black text-blue-600"/></div>
                 </div>

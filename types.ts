@@ -86,6 +86,8 @@ export interface ProjectData {
   location: string;
   date: string;
   technicianName: string;
+  auditorCompany: string;
+  projectReference: string;
   energyCost: number;
   selectedMeasureIds: string[];
   customMeasures: string[];
