@@ -13,7 +13,7 @@ import { AIAdvisorModal, AIAdvisorData } from './components/AIAdvisorModal';
 import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Save, FolderOpen, FileText, Calculator, ArrowRight, TrendingDown,
-  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle
+  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus
 } from 'lucide-react';
 
 // Helper para inicializar o orçamento com rigor técnico no arranque e em atualizações
@@ -177,6 +177,16 @@ const App: React.FC = () => {
       setIsBudgetDirty(false);
       setIsSuggesting(false);
     }, 1200);
+  };
+
+  const handleNewProject = () => {
+    if (window.confirm('Tem a certeza que deseja criar um novo projeto? Todos os dados atuais não gravados serão perdidos.')) {
+      setProject(INITIAL_PROJECT);
+      setView('editor');
+      setStep('project');
+      setIsBudgetDirty(false);
+      setLastBaseForBudget(JSON.stringify(INITIAL_PROJECT.baseScenario));
+    }
   };
 
   const handleSaveProject = () => {
@@ -354,6 +364,7 @@ const App: React.FC = () => {
           </div>
           <div className="h-10 w-px bg-slate-800 hidden md:block" />
           <div className="flex items-center gap-2">
+            <button onClick={handleNewProject} className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight"><FilePlus size={16}/> Novo</button>
             <input type="file" ref={fileInputRef} onChange={handleOpenProject} accept=".json" className="hidden" />
             <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight"><FolderOpen size={16}/> Abrir</button>
             <button onClick={handleSaveProject} className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight shadow-lg shadow-blue-500/10"><Save size={16}/> Gravar</button>
