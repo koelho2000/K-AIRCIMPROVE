@@ -5,15 +5,16 @@ export type Brand = 'Atlas Copco' | 'Kaeser' | 'Ingersoll Rand' | 'Generic';
 export type ProfileType = 'Turno Normal (08-17h)' | 'Turno Duplo (06-22h)' | 'Contínuo (24h)' | 'Personalizado';
 
 export const BUDGET_CHAPTERS = [
-  "1. Trabalhos preparatórios e preliminares",
-  "2. Desmontagem e desativação do sistema existente",
-  "3. Fornecimento de novos equipamentos",
-  "4. Obras de adaptação civil",
-  "5. Instalação mecânica",
-  "6. Instalação elétrica",
-  "7. Ensaios, comissionamento e colocação em serviço",
-  "8. Formação, documentação e garantias",
-  "9. Trabalhos finais e entrega da obra"
+  "1. Estudos e Projetos de Execução",
+  "2. Trabalhos preparatórios e preliminares",
+  "3. Desmontagem e desativação do sistema existente",
+  "4. Fornecimento de novos equipamentos",
+  "5. Obras de adaptação civil",
+  "6. Instalação mecânica",
+  "7. Instalação elétrica",
+  "8. Ensaios, comissionamento e colocação em serviço",
+  "9. Formação, documentação e garantias",
+  "10. Trabalhos finais e entrega da obra"
 ] as const;
 
 export type BudgetChapter = typeof BUDGET_CHAPTERS[number];

@@ -16,6 +16,91 @@ import {
   Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle
 } from 'lucide-react';
 
+// Helper para inicializar o orçamento com rigor técnico no arranque e em atualizações
+const generateTechnicalBudget = (selectedIds: string[], scenario: ScenarioData): BudgetItem[] => {
+  let items: BudgetItem[] = [];
+  const activeMeasures = PREDEFINED_MEASURES.filter(m => selectedIds.includes(m.id));
+
+  activeMeasures.forEach(m => {
+    m.defaultBudgetTemplates.forEach(t => {
+      let finalUnitPrice = t.unitPrice;
+      
+      // Capitulo 4: Fornecimento (Preço OEM se selecionado)
+      if (m.id === 'vsd_install' && t.chapter.includes('4. Fornecimento de novos equipamentos')) {
+        const model = COMPRESSOR_DATABASE.find(cd => cd.id === scenario.selectedModelId);
+        if (model) finalUnitPrice = model.estimatedPrice;
+      }
+
+      // Capitulo 5: Adaptação Civil (Baseado na potência -> rigor técnico)
+      if (m.id === 'vsd_install' && t.chapter.includes('5. Obras de adaptação civil')) {
+        // Estimativa técnica: maciço e ventilação proporcional à potência
+        finalUnitPrice = Math.max(1200, scenario.powerLoadKW * 100);
+      }
+
+      items.push({
+        ...t,
+        id: Math.random().toString(36).substr(2, 9),
+        measureId: m.id,
+        unitPrice: finalUnitPrice,
+        total: t.quantity * finalUnitPrice
+      });
+    });
+  });
+
+  // Capítulo 1: Estudos e Projetos (10% sobre o subtotal técnico cumulativo)
+  const technicalSubtotal = items.reduce((a, b) => a + b.total, 0);
+  if (technicalSubtotal > 0) {
+    const fee = technicalSubtotal * 0.10;
+    items.push({
+      id: 'auto-project-fee',
+      measureId: 'global_project',
+      description: 'Estudos Prévios, Projeto de Execução e Licenciamento Técnico (10% Capex)',
+      category: 'Serviço',
+      chapter: BUDGET_CHAPTERS[0],
+      quantity: 1,
+      unitPrice: fee,
+      total: fee
+    });
+  }
+
+  return items;
+};
+
+const INITIAL_BASE: ScenarioData = {
+  compressorType: 'Parafuso Velocidade Fixa',
+  profileType: 'Turno Normal (08-17h)',
+  loadStartTime: 8,
+  hoursLoadPerDay: 12,
+  hoursUnloadPerDay: 4,
+  powerLoadKW: 45,
+  powerUnloadKW: 15,
+  flowLS: 120,
+  pressureBar: 8.5,
+  leakPercentage: 25,
+  daysPerWeek: 5,
+  weeksPerYear: 52,
+  maintenanceCostEuroPerYear: 1800
+};
+
+const INITIAL_PROPOSED: ScenarioData = {
+  compressorType: 'Parafuso VSD',
+  selectedModelId: 'ac-ga37vsd',
+  profileType: 'Turno Normal (08-17h)',
+  loadStartTime: 8,
+  hoursLoadPerDay: 14,
+  hoursUnloadPerDay: 0.5,
+  powerLoadKW: 37,
+  powerUnloadKW: 6,
+  flowLS: 125,
+  pressureBar: 7.0,
+  leakPercentage: 5,
+  daysPerWeek: 5,
+  weeksPerYear: 52,
+  maintenanceCostEuroPerYear: 1200
+};
+
+const INITIAL_MEASURES = ['vsd_install', 'leak_repair', 'pressure_reduction'];
+
 const INITIAL_PROJECT: ProjectData = {
   clientName: 'Indústria Têxtil Global',
   installation: 'Unidade Industrial Porto',
@@ -23,39 +108,11 @@ const INITIAL_PROJECT: ProjectData = {
   date: new Date().toISOString().split('T')[0],
   technicianName: 'Eng. Ricardo Coelho',
   energyCost: 0.145,
-  selectedMeasureIds: [], 
+  selectedMeasureIds: INITIAL_MEASURES, 
   customMeasures: [],
-  budgetItems: [],
-  baseScenario: {
-    compressorType: 'Parafuso Velocidade Fixa',
-    profileType: 'Turno Normal (08-17h)',
-    loadStartTime: 8,
-    hoursLoadPerDay: 12,
-    hoursUnloadPerDay: 4,
-    powerLoadKW: 45,
-    powerUnloadKW: 15,
-    flowLS: 120,
-    pressureBar: 8.5,
-    leakPercentage: 25,
-    daysPerWeek: 5,
-    weeksPerYear: 52,
-    maintenanceCostEuroPerYear: 1800
-  },
-  proposedScenario: {
-    compressorType: 'Parafuso VSD',
-    profileType: 'Turno Normal (08-17h)',
-    loadStartTime: 8,
-    hoursLoadPerDay: 14,
-    hoursUnloadPerDay: 0.5,
-    powerLoadKW: 38,
-    powerUnloadKW: 8,
-    flowLS: 115,
-    pressureBar: 7.0,
-    leakPercentage: 5,
-    daysPerWeek: 5,
-    weeksPerYear: 52,
-    maintenanceCostEuroPerYear: 1200
-  }
+  budgetItems: generateTechnicalBudget(INITIAL_MEASURES, INITIAL_PROPOSED),
+  baseScenario: INITIAL_BASE,
+  proposedScenario: INITIAL_PROPOSED
 };
 
 type ViewMode = 'editor' | 'diagrams' | 'report' | 'database';
@@ -65,29 +122,26 @@ const App: React.FC = () => {
   const [project, setProject] = useState<ProjectData>(INITIAL_PROJECT);
   const [view, setView] = useState<ViewMode>('editor');
   const [step, setStep] = useState<EditorStep>('project');
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set([BUDGET_CHAPTERS[0], BUDGET_CHAPTERS[2]]));
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set([BUDGET_CHAPTERS[0], BUDGET_CHAPTERS[3], BUDGET_CHAPTERS[4]]));
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showAIAdvisor, setShowAIAdvisor] = useState(false);
   const [aiAdvisorData, setAIAdvisorData] = useState<AIAdvisorData | null>(null);
   
-  // Controle de "Orçamento Desatualizado"
   const [lastBaseForBudget, setLastBaseForBudget] = useState<string>(JSON.stringify(INITIAL_PROJECT.baseScenario));
   const [isBudgetDirty, setIsBudgetDirty] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Monitorar alterações no Cenário Base para marcar orçamento como sujo
   useEffect(() => {
     const currentBaseStr = JSON.stringify(project.baseScenario);
+    const currentPropStr = JSON.stringify(project.proposedScenario.selectedModelId);
     if (currentBaseStr !== lastBaseForBudget) {
       setIsBudgetDirty(true);
-    } else {
-      setIsBudgetDirty(false);
     }
-  }, [project.baseScenario, lastBaseForBudget]);
+  }, [project.baseScenario, project.proposedScenario.selectedModelId, lastBaseForBudget]);
 
-  // Lógica de Sincronização e Bloqueio de Medidas
+  // Sincronização automática de medidas forçadas por alterações técnicas
   useEffect(() => {
     const forcedIds: string[] = [];
     if (project.proposedScenario.pressureBar < project.baseScenario.pressureBar) forcedIds.push('pressure_reduction');
@@ -104,68 +158,27 @@ const App: React.FC = () => {
         }
       });
       if (!changed) return prev;
-
-      const newBudget = [...prev.budgetItems];
-      forcedIds.forEach(mId => {
-        if (!newBudget.some(i => i.measureId === mId)) {
-          const m = PREDEFINED_MEASURES.find(x => x.id === mId);
-          m?.defaultBudgetTemplates.forEach(t => {
-            newBudget.push({ ...t, id: Math.random().toString(36).substr(2, 9), measureId: mId, total: t.quantity * t.unitPrice });
-          });
-        }
-      });
-
-      return { ...prev, selectedMeasureIds: Array.from(current), budgetItems: newBudget };
+      setIsBudgetDirty(true);
+      return { ...prev, selectedMeasureIds: Array.from(current) };
     });
   }, [project.proposedScenario.pressureBar, project.proposedScenario.leakPercentage, project.proposedScenario.compressorType, project.baseScenario.pressureBar]);
 
   const results = useMemo(() => getResults(project), [project]);
 
-  // Função para atualização rigorosa do orçamento
   const handleUpdateBudget = () => {
     setIsSuggesting(true);
-    // Simular processamento técnico
     setTimeout(() => {
       setProject(prev => {
-        // 1. Identificar medidas que precisam de ser re-aplicadas
-        const currentMeasures = PREDEFINED_MEASURES.filter(m => prev.selectedMeasureIds.includes(m.id));
-        
-        // 2. Limpar itens de orçamento vinculados a medidas automáticas para garantir rigor
-        // Mas manter itens personalizados (sem measureId)
-        let updatedBudget = prev.budgetItems.filter(item => !item.measureId);
-        
-        // 3. Re-aplicar templates baseados no novo estado técnico
-        currentMeasures.forEach(m => {
-          m.defaultBudgetTemplates.forEach(t => {
-            let finalUnitPrice = t.unitPrice;
-            
-            // Ajuste rigoroso: se for instalação de compressor e tivermos um modelo selecionado com preço
-            if (m.id === 'vsd_install' && t.category === 'Equipamento') {
-              const model = COMPRESSOR_DATABASE.find(cd => cd.id === prev.proposedScenario.selectedModelId);
-              if (model) finalUnitPrice = model.estimatedPrice;
-            }
-
-            updatedBudget.push({
-              ...t,
-              id: Math.random().toString(36).substr(2, 9),
-              measureId: m.id,
-              unitPrice: finalUnitPrice,
-              total: t.quantity * finalUnitPrice
-            });
-          });
-        });
-
-        return { ...prev, budgetItems: updatedBudget };
+        const updatedItems = generateTechnicalBudget(prev.selectedMeasureIds, prev.proposedScenario);
+        return { ...prev, budgetItems: updatedItems };
       });
       
       setLastBaseForBudget(JSON.stringify(project.baseScenario));
       setIsBudgetDirty(false);
       setIsSuggesting(false);
-      alert("Orçamento atualizado com sucesso com base nos novos parâmetros técnicos do Cenário Base.");
-    }, 800);
+    }, 1200);
   };
 
-  // Persistência de Ficheiro
   const handleSaveProject = () => {
     const dataStr = JSON.stringify(project, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
@@ -183,7 +196,6 @@ const App: React.FC = () => {
   const handleOpenProject = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -192,12 +204,13 @@ const App: React.FC = () => {
           setProject(json);
           setStep('project');
           setLastBaseForBudget(JSON.stringify(json.baseScenario));
+          setIsBudgetDirty(false);
           alert('Projeto carregado com sucesso!');
         } else {
-          alert('Erro: O ficheiro selecionado não parece ser um projeto válido do K-AIRCIMPROVE.');
+          alert('Erro: Ficheiro inválido.');
         }
       } catch (err) {
-        alert('Erro ao ler o ficheiro de projeto.');
+        alert('Erro ao ler o ficheiro.');
       }
     };
     reader.readAsText(file);
@@ -215,40 +228,26 @@ const App: React.FC = () => {
       powerUnloadKW: model.type === 'Parafuso VSD' ? model.nominalPowerKW * 0.15 : model.nominalPowerKW * 0.35
     };
     setProject(prev => ({ ...prev, [scenario === 'base' ? 'baseScenario' : 'proposedScenario']: updated }));
-    
-    // Se selecionamos um modelo para o proposto, avisar que o orçamento pode precisar de refresh se o preço mudou
-    if (scenario === 'proposed') {
-      setIsBudgetDirty(true);
-    }
+    if (scenario === 'proposed') setIsBudgetDirty(true);
   };
 
   const handleSuggestBest = async () => {
     setIsSuggesting(true);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const usefulFlowBase = project.baseScenario.flowLS * (1 - project.baseScenario.leakPercentage / 100);
-    const hoursUnload = project.baseScenario.hoursUnloadPerDay;
-
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
-        contents: `Analise as métricas de auditoria industrial e sugira o compressor OEM ideal:
-- Caudal Útil Necessário: ${usefulFlowBase.toFixed(1)} L/s.
-- Horas em Vazio Atuais: ${hoursUnload}h/dia.
-- Base OEM: ${JSON.stringify(COMPRESSOR_DATABASE.map(m => ({ id: m.id, brand: m.brand, model: m.model, kw: m.nominalPowerKW, flow: m.flowLS, type: m.type })))}
-Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 15% do tempo. Retorne JSON {modelId, justification}.`,
+        contents: `Analise as métricas de auditoria industrial e sugira o compressor OEM ideal da base de dados fornecida. Caudal Útil Necessário: ${usefulFlowBase.toFixed(1)} L/s. Base OEM: ${JSON.stringify(COMPRESSOR_DATABASE.map(m => ({ id: m.id, brand: m.brand, model: m.model, kw: m.nominalPowerKW, flow: m.flowLS, type: m.type })))}`,
         config: {
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
-            properties: {
-              modelId: { type: Type.STRING },
-              justification: { type: Type.STRING }
-            },
+            properties: { modelId: { type: Type.STRING }, justification: { type: Type.STRING } },
             required: ['modelId', 'justification']
           }
         }
       });
-
       const data = JSON.parse(response.text || '{}');
       const model = COMPRESSOR_DATABASE.find(m => m.id === data.modelId);
       if (model) {
@@ -257,65 +256,30 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
       }
     } catch (err) {
       alert('Falha na conexão IA.');
-    } finally {
-      setIsSuggesting(false);
-    }
+    } finally { setIsSuggesting(false); }
   };
 
   const handleSuggestStrategy = async () => {
     setIsSuggesting(true);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
-        contents: `Como um especialista em ar comprimido e eficiência energética, analise os dados deste Cenário Base (Auditado) e proponha estratégias para o Cenário Proposto:
-        DADOS AUDITADOS:
-        - Compressor: ${project.baseScenario.compressorType}
-        - Potência Carga: ${project.baseScenario.powerLoadKW} kW
-        - Potência Vazio: ${project.baseScenario.powerUnloadKW} kW
-        - Horas Carga/Dia: ${project.baseScenario.hoursLoadPerDay}h
-        - Horas Vazio/Dia: ${project.baseScenario.hoursUnloadPerDay}h
-        - Pressão: ${project.baseScenario.pressureBar} bar
-        - Fugas: ${project.baseScenario.leakPercentage}%
-        
-        OBJETIVO: Propor 4 estratégias (Categorias: pressure, leaks, technology, operational).
-        Retorne em JSON estruturado com overview, estratégias (title, description, impact, technicalReason, category) e technicalAdvice final.`,
+        contents: `Como um especialista em ar comprimido e eficiência energética (ISO 50001), analise os dados auditados (Base: ${JSON.stringify(project.baseScenario)}) e proponha 4 estratégias concretas em JSON.`,
         config: {
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
-            properties: {
-              overview: { type: Type.STRING },
-              strategies: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    impact: { type: Type.STRING },
-                    technicalReason: { type: Type.STRING },
-                    category: { type: Type.STRING }
-                  },
-                  required: ['title', 'description', 'impact', 'technicalReason', 'category']
-                }
-              },
-              technicalAdvice: { type: Type.STRING }
-            },
+            properties: { overview: { type: Type.STRING }, strategies: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, description: { type: Type.STRING }, impact: { type: Type.STRING }, technicalReason: { type: Type.STRING }, category: { type: Type.STRING } }, required: ['title', 'description', 'impact', 'technicalReason', 'category'] } }, technicalAdvice: { type: Type.STRING } },
             required: ['overview', 'strategies', 'technicalAdvice']
           }
         }
       });
-
       const data = JSON.parse(response.text || '{}') as AIAdvisorData;
       setAIAdvisorData(data);
       setShowAIAdvisor(true);
-    } catch (err) {
-      alert('Erro ao gerar consultoria IA. Verifique a ligação.');
-    } finally {
-      setIsSuggesting(false);
-    }
+    } catch (err) { alert('Erro ao gerar consultoria IA.'); }
+    finally { setIsSuggesting(false); }
   };
 
   const handleCopyOperationalFromBase = () => {
@@ -337,39 +301,15 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
     const isForced = (measureId === 'pressure_reduction' && project.proposedScenario.pressureBar < project.baseScenario.pressureBar) || 
                      (measureId === 'leak_repair' && project.proposedScenario.leakPercentage < project.baseScenario.leakPercentage) || 
                      (measureId === 'vsd_install' && (project.proposedScenario.compressorType === 'Parafuso VSD' && project.baseScenario.compressorType !== 'Parafuso VSD'));
-
-    if (isForced) {
-      alert("Bloqueio Técnico: Esta medida é intrínseca às melhorias definidas.");
-      return;
-    }
-
+    if (isForced) { alert("Bloqueio Técnico: Medida intrínseca."); return; }
+    
     const isAlreadySelected = project.selectedMeasureIds.includes(measureId);
-    let newBudgetItems = [...project.budgetItems];
-
-    if (isAlreadySelected) {
-      newBudgetItems = newBudgetItems.filter(item => item.measureId !== measureId);
-      setProject(prev => ({
-        ...prev,
-        selectedMeasureIds: prev.selectedMeasureIds.filter(id => id !== measureId),
-        budgetItems: newBudgetItems
-      }));
-    } else {
-      const measure = PREDEFINED_MEASURES.find(m => m.id === measureId);
-      if (measure) {
-        const templates = measure.defaultBudgetTemplates.map(t => ({
-          ...t,
-          id: Math.random().toString(36).substr(2, 9),
-          measureId: measureId,
-          total: t.quantity * t.unitPrice
-        }));
-        newBudgetItems = [...newBudgetItems, ...templates];
-      }
-      setProject(prev => ({
-        ...prev,
-        selectedMeasureIds: [...prev.selectedMeasureIds, measureId],
-        budgetItems: newBudgetItems
-      }));
-    }
+    setProject(prev => {
+      const newIds = isAlreadySelected 
+        ? prev.selectedMeasureIds.filter(id => id !== measureId)
+        : [...prev.selectedMeasureIds, measureId];
+      return { ...prev, selectedMeasureIds: newIds };
+    });
     setIsBudgetDirty(true);
   };
 
@@ -388,23 +328,9 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
   const toggleChapter = (chapter: string) => {
     setExpandedChapters(prev => {
       const next = new Set(prev);
-      if (next.has(chapter)) next.delete(chapter);
-      else next.add(chapter);
+      if (next.has(chapter)) next.delete(chapter); else next.add(chapter);
       return next;
     });
-  };
-
-  const addLineToChapter = (chapter: BudgetChapter) => {
-    const newItem: BudgetItem = {
-      id: Date.now().toString(),
-      description: 'Novo Artigo Personalizado',
-      category: 'Material',
-      chapter: chapter,
-      quantity: 1,
-      unitPrice: 0,
-      total: 0
-    };
-    setProject({ ...project, budgetItems: [...project.budgetItems, newItem] });
   };
 
   const steps: {id: EditorStep, label: string, icon: any}[] = [
@@ -426,31 +352,19 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
             <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic shadow-blue-500/20 shadow-lg">K</div>
             <div className="hidden sm:block"><h1 className="text-xl font-bold tracking-tight leading-none mb-1 uppercase">K-AIRCIMPROVE</h1><p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Efficiency Audit Pro Suite</p></div>
           </div>
-          
           <div className="h-10 w-px bg-slate-800 hidden md:block" />
-          
           <div className="flex items-center gap-2">
             <input type="file" ref={fileInputRef} onChange={handleOpenProject} accept=".json" className="hidden" />
-            <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight">
-              <FolderOpen size={16}/> Abrir
-            </button>
-            <button onClick={handleSaveProject} className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight shadow-lg shadow-blue-500/10">
-              <Save size={16}/> Gravar
-            </button>
-            <button onClick={() => setShowHelp(true)} className="p-2.5 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight ml-2">
-              <HelpCircle size={16}/> Ajuda
-            </button>
+            <button onClick={() => fileInputRef.current?.click()} className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight"><FolderOpen size={16}/> Abrir</button>
+            <button onClick={handleSaveProject} className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight shadow-lg shadow-blue-500/10"><Save size={16}/> Gravar</button>
+            <button onClick={() => setShowHelp(true)} className="p-2.5 bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-tight ml-2"><HelpCircle size={16}/> Ajuda</button>
           </div>
         </div>
-
         <nav className="flex bg-slate-800 p-1.5 rounded-2xl gap-1 shadow-inner">
           {[{ id: 'editor', label: 'EDITOR', icon: Calculator }, { id: 'database', label: 'BASE OEM', icon: Library }, { id: 'diagrams', label: 'DIAGRAMAS', icon: BarChart3 }, { id: 'report', label: 'RELATÓRIO', icon: FileText }].map(v => (
-            <button key={v.id} onClick={() => setView(v.id as ViewMode)} className={`px-7 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2.5 ${view === v.id ? 'bg-blue-600 shadow-md text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
-              <v.icon size={14}/> {v.label}
-            </button>
+            <button key={v.id} onClick={() => setView(v.id as ViewMode)} className={`px-7 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2.5 ${view === v.id ? 'bg-blue-600 shadow-md text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}><v.icon size={14}/> {v.label}</button>
           ))}
         </nav>
-
         <div className="text-right hidden lg:block">
            <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter leading-none mb-1">Savings OPEX Anual</p>
            <p className="text-xl font-black text-emerald-400 leading-tight">{results.savingsEuro.toLocaleString()} €</p>
@@ -465,8 +379,7 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
               const isActive = step === s.id;
               return (
                 <button key={s.id} onClick={() => setStep(s.id)} className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all ${isActive ? 'bg-blue-600 text-white shadow-lg font-bold' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}>
-                  <Icon size={14} className={isActive ? 'text-white' : 'text-blue-500/50'}/>
-                  <span className="text-[10px] uppercase font-black tracking-tight">{s.label}</span>
+                  <Icon size={14} className={isActive ? 'text-white' : 'text-blue-500/50'}/><span className="text-[10px] uppercase font-black tracking-tight">{s.label}</span>
                 </button>
               );
             })}
@@ -506,7 +419,7 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
                     </div>
                     <div className="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 space-y-4">
                       <div className="flex items-center gap-3 text-orange-400"><Microscope size={20}/><h4 className="font-black uppercase text-xs">Consumo Específico</h4></div>
-                      <p className="text-sm text-slate-300 leading-relaxed italic">"SEC = Energia Total (kWh) / Caudal Útil Produzido (m³). A métrica de ouro para comparar centrais de ar."</p>
+                      <p className="text-sm text-slate-300 leading-relaxed italic">"SEC = Energia Total (kWh) / Volume Ar Útil Produzido (m³). A métrica de ouro para comparar centrais de ar."</p>
                     </div>
                   </div>
                 </div>
@@ -534,36 +447,16 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
             )}
 
             {step === 'base' && <ScenarioForm accentColor="bg-red-500" title="Cenário Base (Auditado)" data={project.baseScenario} onChange={s=>setProject({...project, baseScenario:s})} onModelSelect={m=>handleModelSelect('base', m)}/>}
-            {step === 'proposed' && (
-              <ScenarioForm 
-                accentColor="bg-emerald-500" 
-                title="Cenário Proposto" 
-                data={project.proposedScenario} 
-                onChange={s=>setProject({...project, proposedScenario:s})} 
-                onModelSelect={m=>handleModelSelect('proposed', m)} 
-                onSuggestBest={handleSuggestBest} 
-                onSuggestStrategy={handleSuggestStrategy}
-                onCopyFromBase={handleCopyOperationalFromBase}
-                isProposed={true}
-              />
-            )}
+            {step === 'proposed' && <ScenarioForm accentColor="bg-emerald-500" title="Cenário Proposto" data={project.proposedScenario} onChange={s=>setProject({...project, proposedScenario:s})} onModelSelect={m=>handleModelSelect('proposed', m)} onSuggestBest={handleSuggestBest} onSuggestStrategy={handleSuggestStrategy} onCopyFromBase={handleCopyOperationalFromBase} isProposed={true}/>}
             
             {step === 'results' && (
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-10 border-b pb-4">Eficiência do Consumo (SEC)</h4>
                    <div className="flex items-center justify-between gap-10">
-                      <div className="text-center">
-                         <p className="text-xs font-black text-red-500 mb-2 uppercase tracking-widest">Auditado</p>
-                         <p className="text-5xl font-black text-slate-900">{results.baseSEC.toFixed(4)}</p>
-                         <p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p>
-                      </div>
+                      <div className="text-center"><p className="text-xs font-black text-red-500 mb-2 uppercase tracking-widest">Auditado</p><p className="text-5xl font-black text-slate-900">{results.baseSEC.toFixed(4)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p></div>
                       <ArrowRight className="text-slate-300" size={40}/>
-                      <div className="text-center">
-                         <p className="text-xs font-black text-emerald-500 mb-2 uppercase tracking-widest">Alvo Proposto</p>
-                         <p className="text-5xl font-black text-emerald-600">{results.proposedSEC.toFixed(4)}</p>
-                         <p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p>
-                      </div>
+                      <div className="text-center"><p className="text-xs font-black text-emerald-500 mb-2 uppercase tracking-widest">Alvo Proposto</p><p className="text-5xl font-black text-emerald-600">{results.proposedSEC.toFixed(4)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p></div>
                    </div>
                    <div className="mt-14 p-10 bg-slate-900 text-white rounded-[2.5rem] text-center shadow-2xl">
                       <p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-widest">Ganho Líquido de Eficiência</p>
@@ -573,10 +466,7 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
                 <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 flex flex-col justify-center">
                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-10 border-b pb-4">Poupança OPEX Estimada</h4>
                    <div className="space-y-8">
-                      <div className="flex justify-between items-center p-8 bg-blue-600 text-white rounded-3xl shadow-xl shadow-blue-500/20">
-                         <span className="text-sm font-black uppercase tracking-widest opacity-60">Poupança Anual</span>
-                         <span className="text-3xl font-black">{results.savingsEuro.toLocaleString()} € / Ano</span>
-                      </div>
+                      <div className="flex justify-between items-center p-8 bg-blue-600 text-white rounded-3xl shadow-xl shadow-blue-500/20"><span className="text-sm font-black uppercase tracking-widest opacity-60">Poupança Anual</span><span className="text-3xl font-black">{results.savingsEuro.toLocaleString()} € / Ano</span></div>
                    </div>
                 </div>
               </div>
@@ -587,24 +477,12 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
                 {isBudgetDirty && (
                   <div className="bg-amber-50 border-l-8 border-amber-500 p-8 rounded-[2rem] shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-6">
-                      <div className="p-4 bg-amber-100 rounded-2xl text-amber-600">
-                        <AlertTriangle size={32} />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-black text-amber-900 uppercase tracking-tight">Orçamento Desatualizado</h4>
-                        <p className="text-sm text-amber-700 font-medium">O Cenário Base foi alterado. É necessário recalcular o plano de investimento para garantir rigor técnico.</p>
-                      </div>
+                      <div className="p-4 bg-amber-100 rounded-2xl text-amber-600"><AlertTriangle size={32} /></div>
+                      <div><h4 className="text-xl font-black text-amber-900 uppercase tracking-tight">Orçamento Desatualizado</h4><p className="text-sm text-amber-700 font-medium">Foram detetadas alterações técnicas nos cenários. É necessário recalcular o CAPEX.</p></div>
                     </div>
-                    <button 
-                      onClick={handleUpdateBudget}
-                      className="px-8 py-4 bg-amber-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-amber-700 transition-all shadow-xl shadow-amber-600/20 active:scale-95 whitespace-nowrap"
-                    >
-                      <RefreshCw size={18} />
-                      Atualizar Orçamento
-                    </button>
+                    <button onClick={handleUpdateBudget} className="px-8 py-4 bg-amber-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 hover:bg-amber-700 transition-all shadow-xl shadow-amber-600/20 active:scale-95 whitespace-nowrap"><RefreshCw size={18} /> Atualizar Orçamento</button>
                   </div>
                 )}
-
                 <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
                   <div className="flex justify-between items-center mb-12">
                     <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Plano de Investimento (CAPEX)</h3>
@@ -618,10 +496,7 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
                       return (
                         <div key={chapter} className="border border-slate-100 rounded-[2rem] overflow-hidden bg-slate-50/30">
                           <button onClick={() => toggleChapter(chapter)} className={`w-full flex items-center justify-between p-8 transition-colors ${isExpanded ? 'bg-white border-b shadow-sm' : 'hover:bg-white'}`}>
-                            <div className="flex items-center gap-4 text-left">
-                              <ChevronRightIcon size={20} className={`text-blue-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}/>
-                              <p className="font-black text-slate-900 uppercase text-sm tracking-tight">{chapter}</p>
-                            </div>
+                            <div className="flex items-center gap-4 text-left"><ChevronRightIcon size={20} className={`text-blue-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}/><p className="font-black text-slate-900 uppercase text-sm tracking-tight">{chapter}</p></div>
                             <p className="text-lg font-black text-slate-900">{chapterTotal.toLocaleString()} €</p>
                           </button>
                           {isExpanded && (
@@ -647,53 +522,25 @@ Instrução: Priorize 'Parafuso VSD' se houver desperdício em vazio superior a 
 
             {step === 'financial' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-blue-600">
-                  <TrendingUp className="text-blue-400 mb-8" size={40}/>
-                  <p className="text-[11px] font-black uppercase opacity-50 mb-3 tracking-[0.2em]">Investimento CAPEX</p>
-                  <p className="text-5xl font-black">{results.capexTotal.toLocaleString()} €</p>
-                </div>
-                <div className="bg-emerald-600 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-emerald-400">
-                  <TrendingDown className="text-white mb-8" size={40}/>
-                  <p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-[0.2em]">Fluxo Poupança Anual</p>
-                  <p className="text-5xl font-black">{results.savingsEuro.toLocaleString()} €</p>
-                </div>
-                <div className="bg-white p-12 rounded-[3.5rem] shadow-xl border border-slate-100 flex flex-col justify-center border-b-8 border-blue-500">
-                  <Clock className="text-blue-600 mb-8" size={40}/>
-                  <p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-[0.2em]">Período de Retorno</p>
-                  <p className="text-5xl font-black text-slate-900">{results.paybackYears.toFixed(1)} <span className="text-lg">Anos</span></p>
-                </div>
+                <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-blue-600"><TrendingUp className="text-blue-400 mb-8" size={40}/><p className="text-[11px] font-black uppercase opacity-50 mb-3 tracking-[0.2em]">Investimento CAPEX</p><p className="text-5xl font-black">{results.capexTotal.toLocaleString()} €</p></div>
+                <div className="bg-emerald-600 p-12 rounded-[3.5rem] text-white shadow-2xl flex flex-col justify-center border-b-8 border-emerald-400"><TrendingDown className="text-white mb-8" size={40}/><p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-[0.2em]">Fluxo Poupança Anual</p><p className="text-5xl font-black">{results.savingsEuro.toLocaleString()} €</p></div>
+                <div className="bg-white p-12 rounded-[3.5rem] shadow-xl border border-slate-100 flex flex-col justify-center border-b-8 border-blue-500"><Clock className="text-blue-600 mb-8" size={40}/><p className="text-[11px] font-black uppercase text-slate-400 mb-3 tracking-[0.2em]">Período de Retorno</p><p className="text-5xl font-black text-slate-900">{results.paybackYears.toFixed(1)} <span className="text-lg">Anos</span></p></div>
               </div>
             )}
           </div>
         )}
 
-        {view === 'database' && (
-          <CompressorDatabaseView 
-            onSelectForProposed={(model) => {
-              handleModelSelect('proposed', model);
-              setView('editor');
-              setStep('proposed');
-            }} 
-          />
-        )}
+        {view === 'database' && <CompressorDatabaseView baseFlow={project.baseScenario.flowLS} onSelectForProposed={(model) => { handleModelSelect('proposed', model); setView('editor'); setStep('proposed'); }} />}
         {view === 'diagrams' && <div className="max-w-7xl mx-auto w-full p-8"><LoadDiagrams project={project} results={results} /></div>}
         {view === 'report' && <div className="report-container p-4 animate-in zoom-in-95 duration-700"><Report project={project} results={results} /></div>}
       </main>
-
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
       <AIAdvisorModal isOpen={showAIAdvisor} onClose={() => setShowAIAdvisor(false)} data={aiAdvisorData} />
-
       {isSuggesting && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[120] flex items-center justify-center">
            <div className="bg-white p-12 rounded-[3rem] shadow-2xl flex flex-col items-center gap-8 max-w-md text-center border-t-8 border-emerald-600">
-              <div className="relative">
-                <Loader2 className="text-emerald-600 animate-spin" size={64}/>
-                <BrainCircuit className="absolute top-0 right-0 text-emerald-400 animate-pulse" size={24}/>
-              </div>
-              <div>
-                <h4 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Processando Técnico</h4>
-                <p className="text-slate-500 font-medium leading-relaxed">O sistema está a aplicar as diretrizes do ADENE para recalcular os vetores de investimento com rigor.</p>
-              </div>
+              <div className="relative"><Loader2 className="text-emerald-600 animate-spin" size={64}/><BrainCircuit className="absolute top-0 right-0 text-emerald-400 animate-pulse" size={24}/></div>
+              <div><h4 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Processando Técnico</h4><p className="text-slate-500 font-medium leading-relaxed">O sistema está a aplicar as diretrizes do ADENE para recalcular os vetores de investimento com rigor.</p></div>
            </div>
         </div>
       )}

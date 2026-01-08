@@ -2,17 +2,20 @@
 import React, { useState, useMemo } from 'react';
 import { COMPRESSOR_DATABASE } from '../utils/compressors';
 import { CompressorModel, Brand, CompressorType } from '../types';
-import { Search, Filter, LineChart, Info, Box, Zap, Gauge, ChevronRight, BarChart2, DollarSign, Activity, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, LineChart, Info, Box, Zap, Gauge, ChevronRight, BarChart2, DollarSign, Activity, CheckCircle2, SlidersHorizontal, ArrowRightLeft } from 'lucide-react';
 import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 
 interface Props {
   onSelectForProposed?: (model: CompressorModel) => void;
+  baseFlow?: number;
 }
 
-export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed }) => {
+export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed, baseFlow }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [brandFilter, setBrandFilter] = useState<Brand | 'All'>('All');
   const [typeFilter, setTypeFilter] = useState<CompressorType | 'All'>('All');
+  const [useFlowFilter, setUseFlowFilter] = useState(false);
+  const [flowMargin, setFlowMargin] = useState(10); // Percentagem
   const [selectedId, setSelectedId] = useState<string | null>(COMPRESSOR_DATABASE[0].id);
 
   const filteredDB = useMemo(() => {
@@ -21,9 +24,17 @@ export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed })
                           c.brand.toLowerCase().includes(searchTerm.toLowerCase());
       const matchBrand = brandFilter === 'All' || c.brand === brandFilter;
       const matchType = typeFilter === 'All' || c.type === typeFilter;
-      return matchSearch && matchBrand && matchType;
+      
+      let matchFlow = true;
+      if (useFlowFilter && baseFlow) {
+        const minFlow = baseFlow * (1 - flowMargin / 100);
+        const maxFlow = baseFlow * (1 + flowMargin / 100);
+        matchFlow = c.flowLS >= minFlow && c.flowLS <= maxFlow;
+      }
+
+      return matchSearch && matchBrand && matchType && matchFlow;
     });
-  }, [searchTerm, brandFilter, typeFilter]);
+  }, [searchTerm, brandFilter, typeFilter, useFlowFilter, flowMargin, baseFlow]);
 
   const selectedModel = useMemo(() => 
     COMPRESSOR_DATABASE.find(c => c.id === selectedId), [selectedId]);
@@ -34,40 +45,88 @@ export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed })
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-10 animate-in fade-in duration-700 pb-20">
       {/* Search & Filters */}
-      <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col xl:flex-row items-center gap-8">
-        <div className="shrink-0 text-center xl:text-left">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase leading-none">Base de Dados OEM</h2>
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2">Biblioteca Técnica de Ativos Industriais</p>
-        </div>
-        
-        <div className="flex-1 flex flex-col md:flex-row w-full gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20}/>
-            <input 
-              type="text" 
-              placeholder="Pesquisar modelo (ex: GA 37, ASD 40...)" 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
-            />
+      <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center gap-8">
+        <div className="w-full flex flex-col xl:flex-row items-center justify-between gap-8">
+          <div className="shrink-0 text-center xl:text-left">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase leading-none">Base de Dados OEM</h2>
+            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2">Biblioteca Técnica de Ativos Industriais</p>
           </div>
-          <div className="flex gap-4">
-            <select 
-              value={brandFilter} 
-              onChange={e => setBrandFilter(e.target.value as any)}
-              className="px-6 py-4 bg-white border border-slate-200 rounded-[1.5rem] outline-none font-bold text-xs uppercase tracking-tight shadow-sm hover:border-blue-300 transition-colors"
-            >
-              {brands.map(b => <option key={b} value={b}>{b === 'All' ? 'TODAS AS MARCAS' : b.toUpperCase()}</option>)}
-            </select>
-            <select 
-              value={typeFilter} 
-              onChange={e => setTypeFilter(e.target.value as any)}
-              className="px-6 py-4 bg-white border border-slate-200 rounded-[1.5rem] outline-none font-bold text-xs uppercase tracking-tight shadow-sm hover:border-blue-300 transition-colors"
-            >
-              {types.map(t => <option key={t} value={t}>{t === 'All' ? 'TODOS OS TIPOS' : t === 'Parafuso Velocidade Fixa' ? 'VEL. FIXA' : 'VSD'}</option>)}
-            </select>
+          
+          <div className="flex-1 flex flex-col md:flex-row w-full gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20}/>
+              <input 
+                type="text" 
+                placeholder="Pesquisar modelo (ex: GA 37, ASD 40...)" 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
+              />
+            </div>
+            <div className="flex gap-4">
+              <select 
+                value={brandFilter} 
+                onChange={e => setBrandFilter(e.target.value as any)}
+                className="px-6 py-4 bg-white border border-slate-200 rounded-[1.5rem] outline-none font-bold text-xs uppercase tracking-tight shadow-sm hover:border-blue-300 transition-colors"
+              >
+                {brands.map(b => <option key={b} value={b}>{b === 'All' ? 'TODAS AS MARCAS' : b.toUpperCase()}</option>)}
+              </select>
+              <select 
+                value={typeFilter} 
+                onChange={e => setTypeFilter(e.target.value as any)}
+                className="px-6 py-4 bg-white border border-slate-200 rounded-[1.5rem] outline-none font-bold text-xs uppercase tracking-tight shadow-sm hover:border-blue-300 transition-colors"
+              >
+                {types.map(t => <option key={t} value={t}>{t === 'All' ? 'TODOS OS TIPOS' : t === 'Parafuso Velocidade Fixa' ? 'VEL. FIXA' : 'VSD'}</option>)}
+              </select>
+            </div>
           </div>
         </div>
+
+        {/* Smart Flow Filter */}
+        {baseFlow && (
+          <div className="w-full p-6 bg-blue-50/50 border border-blue-100 rounded-[2rem] flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-2xl transition-all ${useFlowFilter ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-200'}`}>
+                <ArrowRightLeft size={20} />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight">Filtro de Caudal Inteligente</h4>
+                <p className="text-[10px] text-slate-500 font-bold">Base: <span className="text-blue-600">{baseFlow} L/s</span> • {(baseFlow * 0.06).toFixed(2)} m³/min</p>
+              </div>
+            </div>
+
+            <div className="flex-1 max-w-xl w-full flex items-center gap-6">
+               <div className="flex-1 flex flex-col gap-2">
+                 <div className="flex justify-between px-1">
+                   <span className="text-[9px] font-black text-slate-400 uppercase">Margem de Erro Caudal</span>
+                   <span className="text-[9px] font-black text-blue-600 uppercase">± {flowMargin}%</span>
+                 </div>
+                 <input 
+                   type="range" 
+                   min="5" 
+                   max="50" 
+                   step="5"
+                   value={flowMargin}
+                   onChange={e => setFlowMargin(parseInt(e.target.value))}
+                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                 />
+                 <div className="flex justify-between px-1 text-[8px] font-bold text-slate-400">
+                    <span>{ (baseFlow * (1 - flowMargin/100)).toFixed(1) } L/s</span>
+                    <span>{ (baseFlow * (1 + flowMargin/100)).toFixed(1) } L/s</span>
+                 </div>
+               </div>
+               <div className="h-10 w-px bg-blue-200/50 hidden lg:block" />
+               <button 
+                 onClick={() => setUseFlowFilter(!useFlowFilter)}
+                 className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all whitespace-nowrap ${
+                   useFlowFilter ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300'
+                 }`}
+               >
+                 {useFlowFilter ? 'Filtro Ativado' : 'Ativar Filtro de Caudal'}
+               </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -87,6 +146,7 @@ export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed })
                   <th className="p-8">Marca e Modelo</th>
                   <th className="p-8">Tecnologia</th>
                   <th className="p-8 text-center">P (kW)</th>
+                  <th className="p-8 text-center">SEC (kW/m³min)</th>
                   <th className="p-8 text-right pr-12">Caudal (m³/min)</th>
                 </tr>
               </thead>
@@ -111,6 +171,7 @@ export const CompressorDatabaseView: React.FC<Props> = ({ onSelectForProposed })
                       </span>
                     </td>
                     <td className={`p-8 text-center font-black text-lg ${selectedId === c.id ? 'text-white' : 'text-slate-700'}`}>{c.nominalPowerKW}</td>
+                    <td className={`p-8 text-center font-black text-base italic ${selectedId === c.id ? 'text-blue-200' : 'text-blue-500'}`}>{c.specificPowerKW_M3min.toFixed(2)}</td>
                     <td className={`p-8 text-right pr-12 font-black text-lg ${selectedId === c.id ? 'text-white' : 'text-slate-700'}`}>{(c.flowLS * 0.06).toFixed(2)}</td>
                   </tr>
                 ))}
