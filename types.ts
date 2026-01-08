@@ -30,6 +30,11 @@ export interface CompressorModel {
   specificPowerKW_M3min: number;
   efficiencyCurve?: { flowPercentage: number; specificPower: number }[];
   estimatedPrice: number;
+  // Novos campos técnicos
+  dimensions: string; // "C x L x A (mm)"
+  weightKG: number;
+  currentA: number; // Consumo em Amperes
+  voltageV: number; // Tensão (400V padrão industrial)
 }
 
 export interface PredefinedMeasure {

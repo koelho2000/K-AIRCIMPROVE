@@ -1,7 +1,7 @@
 
 import { CompressorModel } from '../types';
 
-// Helper to generate a realistic VSD efficiency curve
+// Helper para gerar curva VSD realista
 const generateVSDCurve = (baseSEC: number) => [
   { flowPercentage: 20, specificPower: baseSEC * 1.25 },
   { flowPercentage: 40, specificPower: baseSEC * 1.10 },
@@ -11,49 +11,59 @@ const generateVSDCurve = (baseSEC: number) => [
 ];
 
 export const COMPRESSOR_DATABASE: CompressorModel[] = [
-  // --- ATLAS COPCO ---
-  // GA Fixed Speed
-  { id: 'ac-ga7', brand: 'Atlas Copco', model: 'GA 7', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 7.5, flowLS: 21, pressureMaxBar: 10, specificPowerKW_M3min: 7.2, estimatedPrice: 6800 },
-  { id: 'ac-ga11', brand: 'Atlas Copco', model: 'GA 11', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 30, pressureMaxBar: 10, specificPowerKW_M3min: 6.8, estimatedPrice: 8500 },
-  { id: 'ac-ga15', brand: 'Atlas Copco', model: 'GA 15', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 15, flowLS: 42, pressureMaxBar: 10, specificPowerKW_M3min: 6.6, estimatedPrice: 10200 },
-  { id: 'ac-ga22', brand: 'Atlas Copco', model: 'GA 22', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 65, pressureMaxBar: 10, specificPowerKW_M3min: 6.4, estimatedPrice: 14500 },
-  { id: 'ac-ga37', brand: 'Atlas Copco', model: 'GA 37', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 37, flowLS: 112, pressureMaxBar: 10, specificPowerKW_M3min: 6.2, estimatedPrice: 19800 },
-  { id: 'ac-ga55', brand: 'Atlas Copco', model: 'GA 55', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 55, flowLS: 172, pressureMaxBar: 10, specificPowerKW_M3min: 6.1, estimatedPrice: 28000 },
-  { id: 'ac-ga75', brand: 'Atlas Copco', model: 'GA 75', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 75, flowLS: 235, pressureMaxBar: 10, specificPowerKW_M3min: 5.9, estimatedPrice: 39000 },
-  { id: 'ac-ga90', brand: 'Atlas Copco', model: 'GA 90', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 90, flowLS: 285, pressureMaxBar: 10, specificPowerKW_M3min: 5.8, estimatedPrice: 48000 },
-  // GA VSD+ Series
-  { id: 'ac-ga7vsd', brand: 'Atlas Copco', model: 'GA 7 VSD+', type: 'Parafuso VSD', nominalPowerKW: 7.5, flowLS: 24, pressureMaxBar: 13, specificPowerKW_M3min: 6.4, estimatedPrice: 11500, efficiencyCurve: generateVSDCurve(6.4) },
-  { id: 'ac-ga11vsd', brand: 'Atlas Copco', model: 'GA 11 VSD+', type: 'Parafuso VSD', nominalPowerKW: 11, flowLS: 34, pressureMaxBar: 13, specificPowerKW_M3min: 6.2, estimatedPrice: 13800, efficiencyCurve: generateVSDCurve(6.2) },
-  { id: 'ac-ga15vsd', brand: 'Atlas Copco', model: 'GA 15 VSD+', type: 'Parafuso VSD', nominalPowerKW: 15, flowLS: 48, pressureMaxBar: 13, specificPowerKW_M3min: 6.1, estimatedPrice: 16200, efficiencyCurve: generateVSDCurve(6.1) },
-  { id: 'ac-ga22vsd', brand: 'Atlas Copco', model: 'GA 22 VSD+', type: 'Parafuso VSD', nominalPowerKW: 22, flowLS: 72, pressureMaxBar: 13, specificPowerKW_M3min: 5.9, estimatedPrice: 21000, efficiencyCurve: generateVSDCurve(5.9) },
-  { id: 'ac-ga37vsd', brand: 'Atlas Copco', model: 'GA 37 VSD+', type: 'Parafuso VSD', nominalPowerKW: 37, flowLS: 125, pressureMaxBar: 13, specificPowerKW_M3min: 5.7, estimatedPrice: 29500, efficiencyCurve: generateVSDCurve(5.7) },
-  { id: 'ac-ga55vsd', brand: 'Atlas Copco', model: 'GA 55 VSD+', type: 'Parafuso VSD', nominalPowerKW: 55, flowLS: 188, pressureMaxBar: 13, specificPowerKW_M3min: 5.5, estimatedPrice: 42000, efficiencyCurve: generateVSDCurve(5.5) },
-  { id: 'ac-ga75vsd', brand: 'Atlas Copco', model: 'GA 75 VSD+', type: 'Parafuso VSD', nominalPowerKW: 75, flowLS: 245, pressureMaxBar: 13, specificPowerKW_M3min: 5.4, estimatedPrice: 58000, efficiencyCurve: generateVSDCurve(5.4) },
-  { id: 'ac-ga90vsd', brand: 'Atlas Copco', model: 'GA 90 VSD+', type: 'Parafuso VSD', nominalPowerKW: 90, flowLS: 295, pressureMaxBar: 13, specificPowerKW_M3min: 5.3, estimatedPrice: 72000, efficiencyCurve: generateVSDCurve(5.3) },
+  // --- ATLAS COPCO (Expandido) ---
+  { id: 'ac-ga5', brand: 'Atlas Copco', model: 'GA 5', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 5.5, flowLS: 14, pressureMaxBar: 10, specificPowerKW_M3min: 7.5, estimatedPrice: 5200, dimensions: '1130 x 680 x 1245', weightKG: 260, currentA: 11, voltageV: 400 },
+  { id: 'ac-ga7', brand: 'Atlas Copco', model: 'GA 7', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 7.5, flowLS: 21, pressureMaxBar: 10, specificPowerKW_M3min: 7.2, estimatedPrice: 6800, dimensions: '1130 x 680 x 1245', weightKG: 285, currentA: 15, voltageV: 400 },
+  { id: 'ac-ga11', brand: 'Atlas Copco', model: 'GA 11', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 30, pressureMaxBar: 10, specificPowerKW_M3min: 6.8, estimatedPrice: 8500, dimensions: '1285 x 830 x 1555', weightKG: 395, currentA: 22, voltageV: 400 },
+  { id: 'ac-ga15', brand: 'Atlas Copco', model: 'GA 15', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 15, flowLS: 42, pressureMaxBar: 10, specificPowerKW_M3min: 6.6, estimatedPrice: 10200, dimensions: '1285 x 830 x 1555', weightKG: 410, currentA: 30, voltageV: 400 },
+  { id: 'ac-ga18', brand: 'Atlas Copco', model: 'GA 18', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 18.5, flowLS: 52, pressureMaxBar: 10, specificPowerKW_M3min: 6.5, estimatedPrice: 12400, dimensions: '1285 x 830 x 1555', weightKG: 435, currentA: 37, voltageV: 400 },
+  { id: 'ac-ga22', brand: 'Atlas Copco', model: 'GA 22', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 65, pressureMaxBar: 10, specificPowerKW_M3min: 6.4, estimatedPrice: 14500, dimensions: '1285 x 830 x 1555', weightKG: 460, currentA: 44, voltageV: 400 },
+  { id: 'ac-ga30', brand: 'Atlas Copco', model: 'GA 30', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 30, flowLS: 88, pressureMaxBar: 10, specificPowerKW_M3min: 6.3, estimatedPrice: 17500, dimensions: '1765 x 970 x 1800', weightKG: 810, currentA: 60, voltageV: 400 },
+  { id: 'ac-ga37', brand: 'Atlas Copco', model: 'GA 37', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 37, flowLS: 112, pressureMaxBar: 10, specificPowerKW_M3min: 6.2, estimatedPrice: 19800, dimensions: '1765 x 970 x 1800', weightKG: 845, currentA: 73, voltageV: 400 },
+  { id: 'ac-ga45', brand: 'Atlas Copco', model: 'GA 45', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 45, flowLS: 138, pressureMaxBar: 10, specificPowerKW_M3min: 6.15, estimatedPrice: 23500, dimensions: '1765 x 970 x 1800', weightKG: 880, currentA: 89, voltageV: 400 },
+  { id: 'ac-ga55', brand: 'Atlas Copco', model: 'GA 55', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 55, flowLS: 172, pressureMaxBar: 10, specificPowerKW_M3min: 6.1, estimatedPrice: 28000, dimensions: '2020 x 1060 x 1950', weightKG: 1150, currentA: 108, voltageV: 400 },
+  { id: 'ac-ga75', brand: 'Atlas Copco', model: 'GA 75', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 75, flowLS: 235, pressureMaxBar: 10, specificPowerKW_M3min: 5.9, estimatedPrice: 39000, dimensions: '2020 x 1060 x 1950', weightKG: 1280, currentA: 147, voltageV: 400 },
+  { id: 'ac-ga90', brand: 'Atlas Copco', model: 'GA 90', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 90, flowLS: 285, pressureMaxBar: 10, specificPowerKW_M3min: 5.8, estimatedPrice: 48000, dimensions: '2545 x 1550 x 2010', weightKG: 2150, currentA: 176, voltageV: 400 },
+  { id: 'ac-ga110', brand: 'Atlas Copco', model: 'GA 110', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 110, flowLS: 345, pressureMaxBar: 10, specificPowerKW_M3min: 5.75, estimatedPrice: 58000, dimensions: '2545 x 1550 x 2010', weightKG: 2300, currentA: 215, voltageV: 400 },
+  { id: 'ac-ga7vsd', brand: 'Atlas Copco', model: 'GA 7 VSD+', type: 'Parafuso VSD', nominalPowerKW: 7.5, flowLS: 24, pressureMaxBar: 13, specificPowerKW_M3min: 6.4, estimatedPrice: 11500, dimensions: '630 x 980 x 1420', weightKG: 210, currentA: 15, voltageV: 400, efficiencyCurve: generateVSDCurve(6.4) },
+  { id: 'ac-ga11vsd', brand: 'Atlas Copco', model: 'GA 11 VSD+', type: 'Parafuso VSD', nominalPowerKW: 11, flowLS: 34, pressureMaxBar: 13, specificPowerKW_M3min: 6.2, estimatedPrice: 13800, dimensions: '630 x 980 x 1420', weightKG: 225, currentA: 22, voltageV: 400, efficiencyCurve: generateVSDCurve(6.2) },
+  { id: 'ac-ga15vsd', brand: 'Atlas Copco', model: 'GA 15 VSD+', type: 'Parafuso VSD', nominalPowerKW: 15, flowLS: 48, pressureMaxBar: 13, specificPowerKW_M3min: 6.1, estimatedPrice: 16200, dimensions: '630 x 980 x 1420', weightKG: 240, currentA: 30, voltageV: 400, efficiencyCurve: generateVSDCurve(6.1) },
+  { id: 'ac-ga22vsd', brand: 'Atlas Copco', model: 'GA 22 VSD+', type: 'Parafuso VSD', nominalPowerKW: 22, flowLS: 72, pressureMaxBar: 13, specificPowerKW_M3min: 5.9, estimatedPrice: 21000, dimensions: '780 x 1270 x 1590', weightKG: 440, currentA: 44, voltageV: 400, efficiencyCurve: generateVSDCurve(5.9) },
+  { id: 'ac-ga37vsd', brand: 'Atlas Copco', model: 'GA 37 VSD+', type: 'Parafuso VSD', nominalPowerKW: 37, flowLS: 125, pressureMaxBar: 13, specificPowerKW_M3min: 5.7, estimatedPrice: 29500, dimensions: '780 x 1270 x 1590', weightKG: 510, currentA: 73, voltageV: 400, efficiencyCurve: generateVSDCurve(5.7) },
 
-  // --- KAESER ---
-  // SM, SK, AS (Small/Medium)
-  { id: 'ks-sm10', brand: 'Kaeser', model: 'SM 10', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 5.5, flowLS: 15, pressureMaxBar: 11, specificPowerKW_M3min: 7.5, estimatedPrice: 5200 },
-  { id: 'ks-sk22', brand: 'Kaeser', model: 'SK 22', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 33, pressureMaxBar: 11, specificPowerKW_M3min: 6.9, estimatedPrice: 7900 },
-  { id: 'ks-as31', brand: 'Kaeser', model: 'AS 31', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 18.5, flowLS: 52, pressureMaxBar: 11, specificPowerKW_M3min: 6.6, estimatedPrice: 11200 },
-  // ASD, BSD, CSD (Medium/Large)
-  { id: 'ks-asd40', brand: 'Kaeser', model: 'ASD 40', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 68, pressureMaxBar: 12, specificPowerKW_M3min: 6.4, estimatedPrice: 15800 },
-  { id: 'ks-asd40v', brand: 'Kaeser', model: 'ASD 40 SFC', type: 'Parafuso VSD', nominalPowerKW: 22, flowLS: 75, pressureMaxBar: 12, specificPowerKW_M3min: 6.3, estimatedPrice: 22500, efficiencyCurve: generateVSDCurve(6.3) },
-  { id: 'ks-bsd75', brand: 'Kaeser', model: 'BSD 75', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 37, flowLS: 118, pressureMaxBar: 12, specificPowerKW_M3min: 6.2, estimatedPrice: 21500 },
-  { id: 'ks-csd105', brand: 'Kaeser', model: 'CSD 105', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 55, flowLS: 185, pressureMaxBar: 12, specificPowerKW_M3min: 6.1, estimatedPrice: 32000 },
-  { id: 'ks-csd125v', brand: 'Kaeser', model: 'CSD 125 SFC', type: 'Parafuso VSD', nominalPowerKW: 75, flowLS: 242, pressureMaxBar: 12, specificPowerKW_M3min: 5.8, estimatedPrice: 49000, efficiencyCurve: generateVSDCurve(5.8) },
-  // DSD (Large)
-  { id: 'ks-dsd175', brand: 'Kaeser', model: 'DSD 175', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 90, flowLS: 295, pressureMaxBar: 15, specificPowerKW_M3min: 5.9, estimatedPrice: 58000 },
-  { id: 'ks-dsd240v', brand: 'Kaeser', model: 'DSD 240 SFC', type: 'Parafuso VSD', nominalPowerKW: 132, flowLS: 420, pressureMaxBar: 15, specificPowerKW_M3min: 5.6, estimatedPrice: 84000, efficiencyCurve: generateVSDCurve(5.6) },
+  // --- KAESER (Expandido) ---
+  { id: 'ks-sm8', brand: 'Kaeser', model: 'SM 8', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 5.5, flowLS: 13, pressureMaxBar: 11, specificPowerKW_M3min: 7.8, estimatedPrice: 4800, dimensions: '630 x 740 x 1100', weightKG: 215, currentA: 11, voltageV: 400 },
+  { id: 'ks-sm10', brand: 'Kaeser', model: 'SM 10', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 5.5, flowLS: 15, pressureMaxBar: 11, specificPowerKW_M3min: 7.5, estimatedPrice: 5200, dimensions: '630 x 740 x 1100', weightKG: 220, currentA: 11, voltageV: 400 },
+  { id: 'ks-sm13', brand: 'Kaeser', model: 'SM 13', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 7.5, flowLS: 22, pressureMaxBar: 11, specificPowerKW_M3min: 7.2, estimatedPrice: 6200, dimensions: '630 x 740 x 1100', weightKG: 235, currentA: 15, voltageV: 400 },
+  { id: 'ks-sk22', brand: 'Kaeser', model: 'SK 22', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 33, pressureMaxBar: 11, specificPowerKW_M3min: 6.9, estimatedPrice: 7900, dimensions: '750 x 895 x 1260', weightKG: 310, currentA: 22, voltageV: 400 },
+  { id: 'ks-sk25', brand: 'Kaeser', model: 'SK 25', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 15, flowLS: 42, pressureMaxBar: 11, specificPowerKW_M3min: 6.7, estimatedPrice: 9500, dimensions: '750 x 895 x 1260', weightKG: 325, currentA: 30, voltageV: 400 },
+  { id: 'ks-as31', brand: 'Kaeser', model: 'AS 31', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 18.5, flowLS: 52, pressureMaxBar: 11, specificPowerKW_M3min: 6.6, estimatedPrice: 11200, dimensions: '750 x 895 x 1260', weightKG: 350, currentA: 37, voltageV: 400 },
+  { id: 'ks-asd32', brand: 'Kaeser', model: 'ASD 32', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 18.5, flowLS: 58, pressureMaxBar: 11, specificPowerKW_M3min: 6.5, estimatedPrice: 13500, dimensions: '1460 x 1030 x 1810', weightKG: 720, currentA: 37, voltageV: 400 },
+  { id: 'ks-asd40', brand: 'Kaeser', model: 'ASD 40', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 68, pressureMaxBar: 12, specificPowerKW_M3min: 6.4, estimatedPrice: 15800, dimensions: '1460 x 1030 x 1810', weightKG: 760, currentA: 44, voltageV: 400 },
+  { id: 'ks-asd50', brand: 'Kaeser', model: 'ASD 50', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 25, flowLS: 78, pressureMaxBar: 12, specificPowerKW_M3min: 6.35, estimatedPrice: 17200, dimensions: '1460 x 1030 x 1810', weightKG: 790, currentA: 50, voltageV: 400 },
+  { id: 'ks-asd40v', brand: 'Kaeser', model: 'ASD 40 SFC', type: 'Parafuso VSD', nominalPowerKW: 22, flowLS: 75, pressureMaxBar: 12, specificPowerKW_M3min: 6.3, estimatedPrice: 22500, dimensions: '1460 x 1030 x 1810', weightKG: 810, currentA: 44, voltageV: 400, efficiencyCurve: generateVSDCurve(6.3) },
+  { id: 'ks-bsd75', brand: 'Kaeser', model: 'BSD 75', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 37, flowLS: 118, pressureMaxBar: 12, specificPowerKW_M3min: 6.2, estimatedPrice: 21500, dimensions: '1590 x 1130 x 1910', weightKG: 980, currentA: 73, voltageV: 400 },
+  { id: 'ks-bsd83', brand: 'Kaeser', model: 'BSD 83', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 45, flowLS: 142, pressureMaxBar: 12, specificPowerKW_M3min: 6.1, estimatedPrice: 25800, dimensions: '1590 x 1130 x 1910', weightKG: 1040, currentA: 89, voltageV: 400 },
+  { id: 'ks-csd105', brand: 'Kaeser', model: 'CSD 105', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 55, flowLS: 185, pressureMaxBar: 12, specificPowerKW_M3min: 6.1, estimatedPrice: 32000, dimensions: '1940 x 1280 x 2050', weightKG: 1350, currentA: 108, voltageV: 400 },
+  { id: 'ks-csd125', brand: 'Kaeser', model: 'CSD 125', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 75, flowLS: 245, pressureMaxBar: 12, specificPowerKW_M3min: 6.0, estimatedPrice: 42000, dimensions: '1940 x 1280 x 2050', weightKG: 1480, currentA: 147, voltageV: 400 },
+  { id: 'ks-csd125v', brand: 'Kaeser', model: 'CSD 125 SFC', type: 'Parafuso VSD', nominalPowerKW: 75, flowLS: 242, pressureMaxBar: 12, specificPowerKW_M3min: 5.8, estimatedPrice: 49000, dimensions: '1940 x 1280 x 2050', weightKG: 1540, currentA: 147, voltageV: 400, efficiencyCurve: generateVSDCurve(5.8) },
+  { id: 'ks-dsd175', brand: 'Kaeser', model: 'DSD 175', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 90, flowLS: 295, pressureMaxBar: 15, specificPowerKW_M3min: 5.9, estimatedPrice: 58000, dimensions: '2690 x 1540 x 2150', weightKG: 2450, currentA: 176, voltageV: 400 },
+  { id: 'ks-dsd240v', brand: 'Kaeser', model: 'DSD 240 SFC', type: 'Parafuso VSD', nominalPowerKW: 132, flowLS: 420, pressureMaxBar: 15, specificPowerKW_M3min: 5.6, estimatedPrice: 84000, dimensions: '2690 x 1540 x 2150', weightKG: 2850, currentA: 258, voltageV: 400, efficiencyCurve: generateVSDCurve(5.6) },
 
-  // --- INGERSOLL RAND ---
-  { id: 'ir-rs11', brand: 'Ingersoll Rand', model: 'RS11i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 29, pressureMaxBar: 10, specificPowerKW_M3min: 7.0, estimatedPrice: 8800 },
-  { id: 'ir-rs15', brand: 'Ingersoll Rand', model: 'RS15i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 15, flowLS: 41, pressureMaxBar: 10, specificPowerKW_M3min: 6.8, estimatedPrice: 10800 },
-  { id: 'ir-rs22', brand: 'Ingersoll Rand', model: 'RS22i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 64, pressureMaxBar: 10, specificPowerKW_M3min: 6.5, estimatedPrice: 15200 },
-  { id: 'ir-rs30', brand: 'Ingersoll Rand', model: 'RS30i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 30, flowLS: 88, pressureMaxBar: 10, specificPowerKW_M3min: 6.4, estimatedPrice: 18500 },
-  { id: 'ir-rs37v', brand: 'Ingersoll Rand', model: 'RS37n VSD', type: 'Parafuso VSD', nominalPowerKW: 37, flowLS: 122, pressureMaxBar: 10, specificPowerKW_M3min: 6.2, estimatedPrice: 28500, efficiencyCurve: generateVSDCurve(6.2) },
-  { id: 'ir-rs55v', brand: 'Ingersoll Rand', model: 'RS55n VSD', type: 'Parafuso VSD', nominalPowerKW: 55, flowLS: 185, pressureMaxBar: 10, specificPowerKW_M3min: 6.0, estimatedPrice: 45000, efficiencyCurve: generateVSDCurve(6.0) },
-  { id: 'ir-rs75', brand: 'Ingersoll Rand', model: 'RS75i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 75, flowLS: 245, pressureMaxBar: 10, specificPowerKW_M3min: 5.9, estimatedPrice: 42000 },
-  { id: 'ir-rs110v', brand: 'Ingersoll Rand', model: 'RS110n VSD', type: 'Parafuso VSD', nominalPowerKW: 110, flowLS: 365, pressureMaxBar: 10, specificPowerKW_M3min: 5.7, estimatedPrice: 82000, efficiencyCurve: generateVSDCurve(5.7) },
-  { id: 'ir-rs160', brand: 'Ingersoll Rand', model: 'RS160i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 160, flowLS: 520, pressureMaxBar: 10, specificPowerKW_M3min: 5.6, estimatedPrice: 95000 },
+  // --- INGERSOLL RAND (Expandido) ---
+  { id: 'ir-rs7', brand: 'Ingersoll Rand', model: 'RS7i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 7.5, flowLS: 19, pressureMaxBar: 10, specificPowerKW_M3min: 7.4, estimatedPrice: 6200, dimensions: '1050 x 750 x 1150', weightKG: 290, currentA: 15, voltageV: 400 },
+  { id: 'ir-rs11', brand: 'Ingersoll Rand', model: 'RS11i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 11, flowLS: 29, pressureMaxBar: 10, specificPowerKW_M3min: 7.0, estimatedPrice: 8800, dimensions: '1200 x 850 x 1350', weightKG: 380, currentA: 22, voltageV: 400 },
+  { id: 'ir-rs15', brand: 'Ingersoll Rand', model: 'RS15i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 15, flowLS: 41, pressureMaxBar: 10, specificPowerKW_M3min: 6.8, estimatedPrice: 10800, dimensions: '1200 x 850 x 1350', weightKG: 405, currentA: 30, voltageV: 400 },
+  { id: 'ir-rs18', brand: 'Ingersoll Rand', model: 'RS18i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 18.5, flowLS: 51, pressureMaxBar: 10, specificPowerKW_M3min: 6.7, estimatedPrice: 13200, dimensions: '1200 x 850 x 1350', weightKG: 430, currentA: 37, voltageV: 400 },
+  { id: 'ir-rs22', brand: 'Ingersoll Rand', model: 'RS22i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 22, flowLS: 64, pressureMaxBar: 10, specificPowerKW_M3min: 6.5, estimatedPrice: 15200, dimensions: '1450 x 950 x 1550', weightKG: 710, currentA: 44, voltageV: 400 },
+  { id: 'ir-rs30', brand: 'Ingersoll Rand', model: 'RS30i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 30, flowLS: 88, pressureMaxBar: 10, specificPowerKW_M3min: 6.4, estimatedPrice: 18500, dimensions: '1750 x 1050 x 1850', weightKG: 890, currentA: 60, voltageV: 400 },
+  { id: 'ir-rs37', brand: 'Ingersoll Rand', model: 'RS37i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 37, flowLS: 115, pressureMaxBar: 10, specificPowerKW_M3min: 6.3, estimatedPrice: 21500, dimensions: '1750 x 1050 x 1850', weightKG: 950, currentA: 73, voltageV: 400 },
+  { id: 'ir-rs45', brand: 'Ingersoll Rand', model: 'RS45i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 45, flowLS: 138, pressureMaxBar: 10, specificPowerKW_M3min: 6.25, estimatedPrice: 24800, dimensions: '1750 x 1050 x 1850', weightKG: 1020, currentA: 89, voltageV: 400 },
+  { id: 'ir-rs37v', brand: 'Ingersoll Rand', model: 'RS37n VSD', type: 'Parafuso VSD', nominalPowerKW: 37, flowLS: 122, pressureMaxBar: 10, specificPowerKW_M3min: 6.2, estimatedPrice: 28500, dimensions: '1750 x 1050 x 1850', weightKG: 1050, currentA: 73, voltageV: 400, efficiencyCurve: generateVSDCurve(6.2) },
+  { id: 'ir-rs45v', brand: 'Ingersoll Rand', model: 'RS45n VSD', type: 'Parafuso VSD', nominalPowerKW: 45, flowLS: 148, pressureMaxBar: 10, specificPowerKW_M3min: 6.1, estimatedPrice: 35000, dimensions: '1750 x 1050 x 1850', weightKG: 1120, currentA: 89, voltageV: 400, efficiencyCurve: generateVSDCurve(6.1) },
+  { id: 'ir-rs55v', brand: 'Ingersoll Rand', model: 'RS55n VSD', type: 'Parafuso VSD', nominalPowerKW: 55, flowLS: 185, pressureMaxBar: 10, specificPowerKW_M3min: 6.0, estimatedPrice: 45000, dimensions: '2100 x 1250 x 1950', weightKG: 1450, currentA: 108, voltageV: 400, efficiencyCurve: generateVSDCurve(6.0) },
+  { id: 'ir-rs75', brand: 'Ingersoll Rand', model: 'RS75i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 75, flowLS: 245, pressureMaxBar: 10, specificPowerKW_M3min: 5.9, estimatedPrice: 42000, dimensions: '2100 x 1250 x 1950', weightKG: 1650, currentA: 147, voltageV: 400 },
+  { id: 'ir-rs90', brand: 'Ingersoll Rand', model: 'RS90i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 90, flowLS: 298, pressureMaxBar: 10, specificPowerKW_M3min: 5.8, estimatedPrice: 52000, dimensions: '2450 x 1450 x 2050', weightKG: 2100, currentA: 176, voltageV: 400 },
+  { id: 'ir-rs110v', brand: 'Ingersoll Rand', model: 'RS110n VSD', type: 'Parafuso VSD', nominalPowerKW: 110, flowLS: 365, pressureMaxBar: 10, specificPowerKW_M3min: 5.7, estimatedPrice: 82000, dimensions: '2450 x 1450 x 2050', weightKG: 2450, currentA: 215, voltageV: 400, efficiencyCurve: generateVSDCurve(5.7) },
+  { id: 'ir-rs160', brand: 'Ingersoll Rand', model: 'RS160i', type: 'Parafuso Velocidade Fixa', nominalPowerKW: 160, flowLS: 520, pressureMaxBar: 10, specificPowerKW_M3min: 5.6, estimatedPrice: 95000, dimensions: '3150 x 1850 x 2250', weightKG: 4200, currentA: 312, voltageV: 400 },
 ];
