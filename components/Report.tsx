@@ -208,10 +208,10 @@ export const Report: React.FC<Props> = ({ project, results }) => {
                         <p className="border-b border-white pb-2 px-4 text-xl">Energia Anual Total (kWh)</p>
                         <p className="pt-2 px-4 text-xl">Volume de Ar Útil (m³)</p>
                     </div>
-                    <span className="text-4xl font-black">=</span>
-                    <span className="text-5xl font-black text-blue-400">kWh/m³</span>
+                    <span className="text-4xl font-black">× 60 =</span>
+                    <span className="text-5xl font-black text-blue-400">kWh/m³/min</span>
                 </div>
-                <p className="text-[10px] text-center opacity-40 font-bold uppercase mt-4">Nota: Volume Útil considera a produção nominal menos o fator de fugas auditado.</p>
+                <p className="text-[10px] text-center opacity-40 font-bold uppercase mt-4">Nota: Volume Útil considera a produção nominal menos o fator de fugas auditado. O fator 60 converte para base de caudal por minuto.</p>
             </div>
           </div>
         </div>
@@ -224,7 +224,7 @@ export const Report: React.FC<Props> = ({ project, results }) => {
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Consumo Específico Atual</p>
-                    <p className="text-3xl font-black text-red-600">{results.baseSEC.toFixed(4)} <span className="text-xs opacity-40">kWh/m³</span></p>
+                    <p className="text-3xl font-black text-red-600">{results.baseSEC.toFixed(2)} <span className="text-xs opacity-40">kWh/m³/min</span></p>
                 </div>
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Custo OPEX Anual</p>
@@ -268,7 +268,7 @@ export const Report: React.FC<Props> = ({ project, results }) => {
             <div className="grid grid-cols-2 gap-4">
                 <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                     <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Novo Consumo Específico</p>
-                    <p className="text-3xl font-black text-emerald-700">{results.proposedSEC.toFixed(4)} <span className="text-xs opacity-40">kWh/m³</span></p>
+                    <p className="text-3xl font-black text-emerald-700">{results.proposedSEC.toFixed(2)} <span className="text-xs opacity-40">kWh/m³/min</span></p>
                 </div>
                 <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
                     <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Poupança OPEX Estimada</p>

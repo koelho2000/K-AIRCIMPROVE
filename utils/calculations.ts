@@ -24,8 +24,8 @@ export const calculateScenarioStats = (s: ScenarioData, energyCost: number) => {
   const energyCostAnnual = annualEnergy * energyCost;
   const totalOpex = energyCostAnnual + s.maintenanceCostEuroPerYear;
   
-  // SEC baseado no Volume Útil (o que interessa ao cliente)
-  const sec = annualVolumeUseful > 0 ? annualEnergy / annualVolumeUseful : 0;
+  // SEC baseado no Volume Útil em kWh/m³/min (kWh/m³ * 60)
+  const sec = annualVolumeUseful > 0 ? (annualEnergy / annualVolumeUseful) * 60 : 0;
   
   return {
     energy: annualEnergy,
@@ -91,8 +91,8 @@ export const getResults = (project: ProjectData): CalculatedResults => {
       },
       { 
         label: 'Consumo Específico Útil (SEC)', 
-        formula: 'Energia Total (kWh) / Volume Ar Útil (m³)', 
-        value: `Base: ${base.sec.toFixed(4)} | Prop: ${proposed.sec.toFixed(4)} kWh/m³` 
+        formula: '(Energia Total (kWh) / Volume Ar Útil (m³)) * 60', 
+        value: `Base: ${base.sec.toFixed(2)} | Prop: ${proposed.sec.toFixed(2)} kWh/m³/min` 
       }
     ]
   };

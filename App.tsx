@@ -13,8 +13,10 @@ import { AIAdvisorModal, AIAdvisorData } from './components/AIAdvisorModal';
 import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Save, FolderOpen, FileText, Calculator, ArrowRight, TrendingDown,
-  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus, Building2, Fingerprint
+  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus, Building2, Fingerprint, ChevronRight, ExternalLink
 } from 'lucide-react';
+
+const APP_VERSION = "v3.0.4-PRO";
 
 // Helper para inicializar o orçamento com rigor técnico no arranque e em atualizações
 const generateTechnicalBudget = (selectedIds: string[], scenario: ScenarioData): BudgetItem[] => {
@@ -110,6 +112,7 @@ type ViewMode = 'editor' | 'diagrams' | 'report' | 'database';
 type EditorStep = 'project' | 'assumptions' | 'base' | 'measures' | 'proposed' | 'results' | 'budget' | 'financial';
 
 const App: React.FC = () => {
+  const [showIntro, setShowIntro] = useState(true);
   const [project, setProject] = useState<ProjectData>(INITIAL_PROJECT);
   const [view, setView] = useState<ViewMode>('editor');
   const [step, setStep] = useState<EditorStep>('project');
@@ -126,7 +129,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const currentBaseStr = JSON.stringify(project.baseScenario);
-    const currentPropStr = JSON.stringify(project.proposedScenario.selectedModelId);
     if (currentBaseStr !== lastBaseForBudget) {
       setIsBudgetDirty(true);
     }
@@ -345,11 +347,67 @@ const App: React.FC = () => {
     { id: 'financial', label: 'Financeiro', icon: Wallet },
   ];
 
+  if (showIntro) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white overflow-hidden relative">
+        {/* Background Glows */}
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-emerald-600/10 blur-[120px] rounded-full animate-pulse delay-700" />
+        
+        <div className="relative z-10 flex flex-col items-center max-w-2xl text-center space-y-12 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-32 h-32 bg-blue-600 rounded-[2.5rem] flex items-center justify-center font-black text-6xl italic shadow-2xl shadow-blue-500/30">K</div>
+            <div className="space-y-2">
+              <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">K-AIRCIMPROVE</h1>
+              <p className="text-xs font-black text-blue-400 uppercase tracking-[0.5em] opacity-80">Audit & Energy Pro Suite</p>
+            </div>
+          </div>
+
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+
+          <div className="space-y-4">
+            <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-md mx-auto">
+              Plataforma profissional para diagnósticos de ar comprimido, cálculos de ROI e relatórios de conformidade energética industrial.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <span className="px-4 py-1.5 bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-700">{APP_VERSION}</span>
+              <span className="px-4 py-1.5 bg-slate-800 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-700">{INITIAL_PROJECT.date}</span>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setShowIntro(false)}
+            className="group px-16 py-6 bg-blue-600 hover:bg-blue-500 text-white rounded-[2rem] font-black text-lg uppercase tracking-widest transition-all shadow-2xl shadow-blue-600/20 active:scale-95 flex items-center gap-4"
+          >
+            Seguinte
+            <ChevronRight className="group-hover:translate-x-2 transition-transform" size={24}/>
+          </button>
+        </div>
+
+        <footer className="absolute bottom-10 left-0 w-full px-12 flex flex-col items-center gap-4 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
+          <div className="flex items-center gap-3">
+             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Desenvolvido por</span>
+             <span className="text-sm font-black text-white uppercase tracking-tight">Koelho2000</span>
+          </div>
+          <a 
+            href="https://www.koelho2000.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest hover:text-blue-300 transition-colors"
+          >
+            www.koelho2000.com
+            <ExternalLink size={12}/>
+          </a>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900">
       <header className="no-print bg-slate-900 text-white px-8 py-4 flex items-center justify-between sticky top-0 z-50 border-b border-slate-800 shadow-xl">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowIntro(true)}>
             <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-2xl italic shadow-blue-500/20 shadow-lg">K</div>
             <div className="hidden sm:block"><h1 className="text-xl font-bold tracking-tight leading-none mb-1 uppercase">K-AIRCIMPROVE</h1><p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Efficiency Audit Pro Suite</p></div>
           </div>
@@ -458,9 +516,9 @@ const App: React.FC = () => {
                 <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100">
                    <h4 className="text-[11px] font-black uppercase text-slate-400 mb-10 border-b pb-4">Eficiência do Consumo (SEC)</h4>
                    <div className="flex items-center justify-between gap-10">
-                      <div className="text-center"><p className="text-xs font-black text-red-500 mb-2 uppercase tracking-widest">Auditado</p><p className="text-5xl font-black text-slate-900">{results.baseSEC.toFixed(4)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p></div>
+                      <div className="text-center"><p className="text-xs font-black text-red-500 mb-2 uppercase tracking-widest">Auditado</p><p className="text-5xl font-black text-slate-900">{results.baseSEC.toFixed(2)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³/min</p></div>
                       <ArrowRight className="text-slate-300" size={40}/>
-                      <div className="text-center"><p className="text-xs font-black text-emerald-500 mb-2 uppercase tracking-widest">Alvo Proposto</p><p className="text-5xl font-black text-emerald-600">{results.proposedSEC.toFixed(4)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³</p></div>
+                      <div className="text-center"><p className="text-xs font-black text-emerald-500 mb-2 uppercase tracking-widest">Alvo Proposto</p><p className="text-5xl font-black text-emerald-600">{results.proposedSEC.toFixed(2)}</p><p className="text-[10px] font-black text-slate-400 uppercase mt-2">kWh/m³/min</p></div>
                    </div>
                    <div className="mt-14 p-10 bg-slate-900 text-white rounded-[2.5rem] text-center shadow-2xl">
                       <p className="text-[11px] font-black uppercase opacity-60 mb-3 tracking-widest">Ganho Líquido de Eficiência</p>
