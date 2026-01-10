@@ -4,7 +4,7 @@ import { ProjectData, CalculatedResults, BudgetItem, BUDGET_CHAPTERS } from '../
 import { PREDEFINED_MEASURES } from '../utils/measures';
 import { generateDailyProfile } from './LoadDiagrams';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer, ShieldCheck, Leaf, Scale, Activity, Microscope, Building2, Fingerprint, FileSpreadsheet, Copy, Check } from 'lucide-react';
+import { CheckCircle, Zap, Clock, TrendingUp, Info, Droplet, Gauge, Target, DollarSign, FileText, Globe, MapPin, BarChart3, AlertTriangle, ListChecks, Award, Download, Printer, ShieldCheck, Leaf, Scale, Activity, Microscope, Building2, Fingerprint, Copy, Check } from 'lucide-react';
 
 interface Props {
   project: ProjectData;
@@ -46,30 +46,6 @@ export const Report: React.FC<Props> = ({ project, results }) => {
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `Relatorio_Auditoria_${project.clientName.replace(/\s/g, '_')}.doc`;
-    link.click();
-  };
-
-  const exportCapexToCSV = () => {
-    // Adição de BOM UTF-8 (\uFEFF) para garantir que o Excel abra com acentos corretos
-    let csv = '\uFEFFCapítulo;Artigo;Categoria;Quantidade;Preço Unitário (EUR);Total (EUR)\n';
-    
-    BUDGET_CHAPTERS.forEach((chapter, idx) => {
-      const items = project.budgetItems.filter(i => i.chapter === chapter);
-      if (items.length > 0) {
-        items.forEach(item => {
-          const desc = item.description.replace(/;/g, ',');
-          csv += `${idx + 1}. ${chapter};${desc};${item.category};${item.quantity};${item.unitPrice.toFixed(2)};${item.total.toFixed(2)}\n`;
-        });
-        const chapterTotal = items.reduce((a, b) => a + b.total, 0);
-        csv += `;;;SUBTOTAL CAPÍTULO;;${chapterTotal.toFixed(2)}\n`;
-      }
-    });
-    csv += `\n;;;TOTAL GERAL INVESTIMENTO;;${results.capexTotal.toFixed(2)}\n`;
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `Plano_Investimento_CAPEX_${project.clientName.replace(/\s/g, '_')}.csv`;
     link.click();
   };
 
@@ -385,20 +361,13 @@ export const Report: React.FC<Props> = ({ project, results }) => {
               <h2 className="text-[12px] font-black text-blue-600 uppercase tracking-widest mb-2">Capítulo 06</h2>
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Plano de Investimento (CAPEX)</h3>
             </div>
-            <div className="no-print flex gap-2">
+            <div className="no-print">
               <button 
                 onClick={copyCapexToClipboard}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg active:scale-95 ${copied ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-slate-900/10'}`}
               >
                 {copied ? <Check size={14}/> : <Copy size={14}/>}
                 {copied ? 'Copiado!' : 'Copiar para Excel'}
-              </button>
-              <button 
-                onClick={exportCapexToCSV}
-                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-              >
-                <FileSpreadsheet size={14}/>
-                Exportar CSV
               </button>
             </div>
           </div>
