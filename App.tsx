@@ -13,10 +13,10 @@ import { AIAdvisorModal, AIAdvisorData } from './components/AIAdvisorModal';
 import { GoogleGenAI, Type } from '@google/genai';
 import { 
   Save, FolderOpen, FileText, Calculator, ArrowRight, TrendingDown,
-  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus, Building2, Fingerprint, ChevronRight, ExternalLink
+  Clock, Euro, Plus, Trash2, CheckCircle, Info, ListChecks, BarChart3, X, Target, Globe, BookOpen, Settings, Layout, Database, TrendingUp, AlertCircle, Library, FileSpreadsheet, Percent, Wallet, MapPin, ChevronDown, ChevronRight as ChevronRightIcon, Loader2, Lock, Sparkles, ShieldCheck, Activity, Scale, Microscope, Download, Upload, HelpCircle, BrainCircuit, RefreshCw, AlertTriangle, FilePlus, Building2, Fingerprint, ChevronRight, ExternalLink, Thermometer, Droplet, Layers, Zap
 } from 'lucide-react';
 
-const APP_VERSION = "v3.0.4-PRO";
+const APP_VERSION = "v3.0.5-PRO";
 
 // Helper para inicializar o orçamento com rigor técnico no arranque e em atualizações
 const generateTechnicalBudget = (selectedIds: string[], scenario: ScenarioData): BudgetItem[] => {
@@ -466,22 +466,124 @@ const App: React.FC = () => {
             )}
 
             {step === 'assumptions' && (
-              <div className="space-y-10">
+              <div className="space-y-12">
                 <div className="bg-slate-900 p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-12 opacity-10"><ShieldCheck size={160} className="text-blue-400"/></div>
-                  <div className="flex items-center gap-5 mb-10"><BookOpen className="text-blue-400" size={40}/><h3 className="text-3xl font-black text-white uppercase tracking-tight">Metodologia e Normativa</h3></div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 space-y-4">
-                      <div className="flex items-center gap-3 text-blue-400"><Activity size={20}/><h4 className="font-black uppercase text-xs">ISO 50001:2018</h4></div>
-                      <p className="text-sm text-slate-300 leading-relaxed italic">"Implementação do ciclo PDCA para gestão sistemática da eficiência energética em centrais de ar comprimido."</p>
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-10 mb-12 relative z-10">
+                    <div className="flex items-center gap-6">
+                      <div className="p-4 bg-blue-600/20 rounded-[1.5rem] text-blue-400 border border-blue-500/30">
+                        <BookOpen size={40}/>
+                      </div>
+                      <div>
+                        <h3 className="text-4xl font-black text-white uppercase tracking-tighter">Metodologia e Normativa</h3>
+                        <p className="text-blue-400 font-black text-[10px] uppercase tracking-[0.3em] mt-2">Referencial Técnico Baseado no Manual ADENE</p>
+                      </div>
                     </div>
-                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 space-y-4">
-                      <div className="flex items-center gap-3 text-emerald-400"><Scale size={20}/><h4 className="font-black uppercase text-xs">Algoritmo de Pressão</h4></div>
-                      <p className="text-sm text-slate-300 leading-relaxed italic">"Regra dos 7%: Por cada bar de aumento de pressão acima de 7 bar, o consumo energético do compressor cresce aprox. 7%."</p>
+                    <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Última Revisão Manual</p>
+                      <p className="text-lg font-black text-white">ADENE 2016 / Koelho PRO 2025</p>
                     </div>
-                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 space-y-4">
-                      <div className="flex items-center gap-3 text-orange-400"><Microscope size={20}/><h4 className="font-black uppercase text-xs">Consumo Específico</h4></div>
-                      <p className="text-sm text-slate-300 leading-relaxed italic">"SEC = Energia Total (kWh) / Volume Ar Útil Produzido (m³). A métrica de ouro para comparar centrais de ar."</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+                    {/* Normas ISO */}
+                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/10 space-y-6 hover:border-blue-500/50 transition-all group">
+                      <div className="flex items-center gap-3 text-blue-400">
+                        <ShieldCheck size={24} className="group-hover:scale-110 transition-transform"/>
+                        <h4 className="font-black uppercase text-sm tracking-tight">Fundamentos Normativos</h4>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex gap-3">
+                          <span className="text-[10px] font-black px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg h-fit">ISO 50001</span>
+                          <p className="text-[11px] text-slate-300 leading-relaxed italic">Gestão de Eficiência Energética através do ciclo PDCA.</p>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-[10px] font-black px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg h-fit">ISO 1217</span>
+                          <p className="text-[11px] text-slate-300 leading-relaxed italic">Normalização FAD (Free Air Delivery) em condições de admissão 20°C/1bar.</p>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="text-[10px] font-black px-2 py-1 bg-blue-600/20 text-blue-400 rounded-lg h-fit">ISO 8573</span>
+                          <p className="text-[11px] text-slate-300 leading-relaxed italic">Classes de pureza e tratamento de ar (partículas/óleo/água).</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Algoritmos ADENE */}
+                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/10 space-y-6 hover:border-emerald-500/50 transition-all group">
+                      <div className="flex items-center gap-3 text-emerald-400">
+                        <Microscope size={24} className="group-hover:scale-110 transition-transform"/>
+                        <h4 className="font-black uppercase text-sm tracking-tight">Algoritmos de Performance</h4>
+                      </div>
+                      <ul className="space-y-4">
+                        <li className="flex items-start gap-3">
+                          <div className="p-1 bg-emerald-500/20 rounded-full mt-1"><ChevronRight size={10} className="text-emerald-400"/></div>
+                          <p className="text-xs text-slate-300 leading-relaxed"><strong>Regra dos 7%:</strong> Cada 1 bar de pressão acima de 7 bar penaliza a potência em ~7%.</p>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <div className="p-1 bg-emerald-500/20 rounded-full mt-1"><ChevronRight size={10} className="text-emerald-400"/></div>
+                          <p className="text-xs text-slate-300 leading-relaxed"><strong>Fator Temperatura:</strong> Aumento de 3°C na aspiração reduz eficiência em 1%.</p>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <div className="p-1 bg-emerald-500/20 rounded-full mt-1"><ChevronRight size={10} className="text-emerald-400"/></div>
+                          <p className="text-xs text-slate-300 leading-relaxed"><strong>Análise LCC:</strong> 80% do custo de vida é Energia, 12% Investimento, 8% Manutenção.</p>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Metodologia de Auditoria */}
+                    <div className="bg-white/5 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/10 space-y-6 hover:border-amber-500/50 transition-all group">
+                      <div className="flex items-center gap-3 text-amber-400">
+                        <Layers size={24} className="group-hover:scale-110 transition-transform"/>
+                        <h4 className="font-black uppercase text-sm tracking-tight">Protocolo de Diagnóstico</h4>
+                      </div>
+                      <div className="space-y-4">
+                         <p className="text-xs text-slate-300 leading-relaxed border-l-2 border-amber-500/30 pl-4">
+                           Monitorização baseada em registo cronológico de <strong>7 dias consecutivos</strong> (8760h simuladas) para captura de turnos e fins-de-semana.
+                         </p>
+                         <p className="text-xs text-slate-300 leading-relaxed border-l-2 border-amber-500/30 pl-4">
+                           Cálculo centrado no <strong>Caudal Útil</strong>: Diferenciação clara entre ar produzido e ar desperdiçado por fugas (auditado entre 20-40% na indústria média).
+                         </p>
+                         <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 flex gap-3 items-center">
+                            <AlertTriangle size={16} className="text-amber-400 shrink-0"/>
+                            <p className="text-[10px] text-amber-100 font-bold uppercase tracking-tight">Rigor Crítico: Fugas & Usos Inapropriados</p>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Memorial de Fórmulas */}
+                  <div className="mt-10 p-10 bg-black/40 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
+                    <div className="absolute bottom-0 right-0 p-10 opacity-5 -mb-5 group-hover:opacity-10 transition-opacity"><Activity size={180} /></div>
+                    <div className="flex items-center gap-3 text-blue-400 mb-8 border-b border-white/10 pb-4">
+                      {/* Fixed: Added Zap to imports to resolve the missing name error */}
+                      <Zap size={20}/>
+                      <h4 className="font-black uppercase text-xs tracking-widest">Memorial Técnico de Fórmulas (SEC Pro)</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+                       <div className="space-y-4 text-center">
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Energia Anual Total</p>
+                          <div className="bg-white/5 p-4 rounded-2xl font-mono text-white text-lg border border-white/5">
+                             E = (H<sub>L</sub> × P<sub>L</sub>) + (H<sub>U</sub> × P<sub>U</sub>)
+                          </div>
+                          <p className="text-[8px] text-slate-400 font-medium leading-relaxed">H<sub>L</sub>: Horas Carga | P<sub>L</sub>: Potência Corrigida<br/>H<sub>U</sub>: Horas Vazio | P<sub>U</sub>: Potência Vazio</p>
+                       </div>
+                       
+                       <div className="space-y-4 text-center">
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Caudal Útil Global</p>
+                          <div className="bg-white/5 p-4 rounded-2xl font-mono text-white text-lg border border-white/5">
+                             V<sub>ú</sub> = V<sub>T</sub> × (1 - F<sub>%</sub>)
+                          </div>
+                          <p className="text-[8px] text-slate-400 font-medium leading-relaxed">V<sub>T</sub>: Volume Produzido Bruto<br/>F<sub>%</sub>: Percentagem de Fugas Auditada</p>
+                       </div>
+
+                       <div className="space-y-4 text-center scale-110">
+                          <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Eficiência Específica Útil</p>
+                          <div className="bg-blue-600/20 p-4 rounded-2xl font-mono text-blue-400 text-lg border border-blue-500/30 shadow-lg shadow-blue-500/5">
+                             SEC = (E / V<sub>ú</sub>) × 60
+                          </div>
+                          <p className="text-[8px] text-blue-300 font-black uppercase mt-2">Unidade: kWh / m³ / min</p>
+                       </div>
                     </div>
                   </div>
                 </div>
