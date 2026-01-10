@@ -121,7 +121,8 @@ export const LoadDiagrams: React.FC<Props> = ({ project, results }) => {
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     
-    let csv = 'Hora_Anual;Dia_do_Ano;Mes;Potencia_Base_kW;Potencia_Proposta_kW\n';
+    // Adição de BOM UTF-8 (\uFEFF) para garantir que o Excel abra com acentos corretos
+    let csv = '\uFEFFHora_Anual;Dia_do_Ano;Mês;Potência_Base_kW;Potência_Proposta_kW\n';
     
     let hourCounter = 0;
     daysInMonth.forEach((days, mIdx) => {
